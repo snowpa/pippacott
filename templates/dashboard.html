@@ -161,19 +161,9 @@
                                 <td>{{ product.annual_inquiries }}</td>
                                 <td>{{ product.engineer_count }}</td>
                                 <td>
-                                    <div class="progress" style="height: 20px;">
-                                        <div class="progress-bar 
-                                            {% if product.resilience_score < 40 %}bg-danger
-                                            {% elif product.resilience_score < 70 %}bg-warning
-                                            {% else %}bg-success{% endif %}" 
-                                            role="progressbar" 
-                                            style="width: {{ product.resilience_score }}%;" 
-                                            aria-valuenow="{{ product.resilience_score }}" 
-                                            aria-valuemin="0" 
-                                            aria-valuemax="100">
-                                            {{ product.resilience_score }}
-                                        </div>
-                                    </div>
+                                    <span class="badge {% if product.resilience_score < 0 %}bg-danger{% elif product.resilience_score == 0 %}bg-warning{% else %}bg-success{% endif %}">
+                                        {% if product.resilience_score > 0 %}+{% endif %}{{ product.resilience_score }}人
+                                    </span>
                                 </td>
                             </tr>
                             {% endfor %}

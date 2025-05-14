@@ -217,19 +217,9 @@ def calculate_dashboard_metrics():
         # Get engineer count from precomputed dictionary
         product_engineer_count = product_engineer_counts.get(product.id, 0)
         
-        # Calculate resilience score (simplified version for performance)
-        if product_engineer_count >= min_engineers_per_product:
-            base_score = 100
-        else:
-            base_score = max(0, 100 - (min_engineers_per_product - product_engineer_count) * 50)
-        
-        # Calculate inquiry load ratio
-        avg_inquiries_per_engineer = product.annual_inquiries / max(1, product_engineer_count)
-        inquiry_load_ratio = avg_inquiries_per_engineer / max(1, avg_inquiries_per_product / avg_engineers_per_product)
-        
-        # Score calculation
-        inquiry_score = max(0, 100 - min(100, (inquiry_load_ratio - 1) * 25))
-        resilience_score = (base_score * 0.7) + (inquiry_score * 0.3)
+        # 基準値からの差分を計算
+        engineer_diff = product_engineer_count - min_engineers_per_product
+        resilience_score = engineer_diff
         
         product_metrics.append({
             'id': product.id,
