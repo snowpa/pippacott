@@ -39,7 +39,7 @@
                                 </div>
                                 <div class="card-body">
                                     {% for param in params %}
-                                    {% if param.key in ['hours_per_inquiry', 'inquiry_work_ratio', 'total_annual_inquiries', 'annual_working_days', 'daily_working_hours', 'target_monthly_overtime'] %}
+                                    {% if param.key in ['hours_per_inquiry', 'inquiry_work_ratio', 'annual_working_days', 'daily_working_hours', 'target_monthly_overtime'] %}
                                     <div class="mb-3">
                                         <label for="{{ param.key }}" class="form-label">{{ param.description }}</label>
                                         {% if param.key == 'inquiry_work_ratio' %}

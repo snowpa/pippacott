@@ -36,41 +36,60 @@ def initialize_default_parameters():
     db.session.commit()
 
 def generate_demo_data():
-    """Generate demo data with 40 engineers, 50 products, and realistic assignments"""
-    # Create engineers
+    """Generate demo data with 40 engineers, 50 products, and realistic assignments with variations"""
+    # Get parameters
+    min_engineers = int(Parameter.query.filter_by(key="min_engineers_per_product").first().value)
+    max_products = int(Parameter.query.filter_by(key="max_products_per_engineer").first().value)
+    total_annual_inquiries = int(Parameter.query.filter_by(key="total_annual_inquiries").first().value)
+
+    # Create engineers with varying max_products capacity
     for i in range(40):
         department = random.choice(DEPARTMENTS)
+        # 20% of engineers with reduced capacity
+        if i < 8:  # 20% of 40 = 8
+            engineer_max_products = max(2, max_products - random.randint(2, 3))
+        else:
+            # Remaining 80% with normal to high capacity
+            engineer_max_products = max_products + random.randint(-1, 2)
+        
         engineer = Engineer(
             name=f"エンジニア {i+1}",
-            department=department
+            department=department,
+            max_products=engineer_max_products
         )
         db.session.add(engineer)
     
     db.session.commit()
     
-    # Create products with varying inquiry counts (using a power law distribution)
-    total_annual_inquiries = int(Parameter.query.filter_by(key="total_annual_inquiries").first().value)
-    
-    # Generate inquiry counts with 20% negative deviation from baseline
+    # Create products with varying inquiry counts and min_engineers requirements
     inquiry_counts = []
-    min_engineers = int(Parameter.query.filter_by(key="min_engineers_per_product").first().value)
+    min_engineers_requirements = []
     
     for i in range(50):
-        if i < 10:  # 20% of products with less than baseline
-            engineer_diff = random.randint(-3, -1)
-        else:  # 80% of products with more than baseline
-            engineer_diff = random.randint(0, 3)
-            
-        # Adjust inquiry count based on engineer difference
-        base_inquiry = total_annual_inquiries / 50  # Even distribution as base
-        inquiry_count = int(base_inquiry * (1 + engineer_diff * 0.2))  # 20% adjustment per engineer difference
+        # 20% of products with higher complexity (more engineers needed)
+        if i < 10:  # 20% of products
+            min_engineers_requirement = min_engineers + random.randint(1, 2)
+            inquiry_multiplier = 1.5 + random.random() * 0.5  # 1.5-2.0x baseline
+        else:
+            # Remaining 80% with varying requirements
+            variation = random.random()
+            if variation < 0.2:  # 16% of remaining (about 20% of total)
+                # Products with reduced requirements
+                min_engineers_requirement = max(1, min_engineers - random.randint(1, 2))
+                inquiry_multiplier = 0.5 + random.random() * 0.3  # 0.5-0.8x baseline
+            else:
+                # Normal products
+                min_engineers_requirement = min_engineers + random.randint(-1, 1)
+                inquiry_multiplier = 0.8 + random.random() * 0.4  # 0.8-1.2x baseline
+        
+        base_inquiry = total_annual_inquiries / 50
+        inquiry_count = int(base_inquiry * inquiry_multiplier)
         inquiry_counts.append(max(10, min(inquiry_count, 2000)))  # Cap between 10 and 2000
+        min_engineers_requirements.append(min_engineers_requirement)
     
-    # Normalize to ensure total matches parameter
+    # Normalize inquiry counts to match total
     total = sum(inquiry_counts)
     normalized_counts = [int(count * total_annual_inquiries / total) for count in inquiry_counts]
-    
-    # Make sure the total equals the parameter value (adjust the last product if needed)
     adjustment = total_annual_inquiries - sum(normalized_counts)
     normalized_counts[-1] += adjustment
     
@@ -82,52 +101,68 @@ def generate_demo_data():
         product = Product(
             name=f"{prefix} {type_name} {i+1}",
             vendor=vendor,
-            annual_inquiries=normalized_counts[i]
+            annual_inquiries=normalized_counts[i],
+            min_engineers=min_engineers_requirements[i]
         )
         db.session.add(product)
     
     db.session.commit()
     
-    # Create assignments
+    # Create assignments with variations
     engineers = Engineer.query.all()
     products = Product.query.all()
     
-    # Sort products by inquiry count (descending)
-    products_sorted = sorted(products, key=lambda p: p.annual_inquiries, reverse=True)
+    # Sort products by complexity (inquiry count * min_engineers)
+    products_sorted = sorted(
+        products,
+        key=lambda p: p.annual_inquiries * p.min_engineers,
+        reverse=True
+    )
     
-    # 1. First ensure each product has at least the minimum number of engineers
-    min_engineers = int(Parameter.query.filter_by(key="min_engineers_per_product").first().value)
-    
-    for product in products_sorted:
-        # Select random engineers for this product
-        available_engineers = random.sample(engineers, min(min_engineers, len(engineers)))
-        
-        for engineer in available_engineers:
-            assignment = Assignment(engineer_id=engineer.id, product_id=product.id)
-            db.session.add(assignment)
+    # First pass: Ensure minimum staffing for 80% of products
+    for product in products_sorted[:40]:  # 80% of products
+        target_engineers = max(2, min(
+            product.min_engineers,
+            int(len(engineers) * 0.2)  # Cap at 20% of total engineers
+        ))
+        available_engineers = [
+            e for e in engineers
+            if Assignment.query.filter_by(engineer_id=e.id).count() < e.max_products
+        ]
+        if available_engineers:
+            selected_engineers = random.sample(
+                available_engineers,
+                min(target_engineers, len(available_engineers))
+            )
+            for engineer in selected_engineers:
+                assignment = Assignment(engineer_id=engineer.id, product_id=product.id)
+                db.session.add(assignment)
     
     db.session.commit()
     
-    # 2. Then assign additional engineers based on product popularity (more inquiries -> more engineers)
-    max_products = int(Parameter.query.filter_by(key="max_products_per_engineer").first().value)
-    
-    for engineer in engineers:
-        # Get current product count for this engineer
-        current_product_count = Assignment.query.filter_by(engineer_id=engineer.id).count()
-        
-        # If engineer has capacity for more products
-        if current_product_count < max_products:
-            # How many more can they take?
-            remaining_capacity = max_products - current_product_count
+    # Second pass: Additional assignments for high-inquiry products
+    for product in products_sorted:
+        current_engineer_count = Assignment.query.filter_by(product_id=product.id).count()
+        if current_engineer_count < product.min_engineers:
+            # Try to add more engineers if available
+            needed = product.min_engineers - current_engineer_count
+            current_engineers = set(
+                a.engineer_id for a in Assignment.query.filter_by(product_id=product.id).all()
+            )
+            available_engineers = [
+                e for e in engineers
+                if e.id not in current_engineers and
+                Assignment.query.filter_by(engineer_id=e.id).count() < e.max_products
+            ]
             
-            # Get products this engineer isn't already assigned to
-            current_product_ids = [a.product_id for a in Assignment.query.filter_by(engineer_id=engineer.id).all()]
-            available_products = [p for p in products_sorted if p.id not in current_product_ids]
-            
-            # Assign up to remaining capacity, prioritizing products with higher inquiry counts
-            for product in available_products[:remaining_capacity]:
-                assignment = Assignment(engineer_id=engineer.id, product_id=product.id)
-                db.session.add(assignment)
+            if available_engineers:
+                selected_engineers = random.sample(
+                    available_engineers,
+                    min(needed, len(available_engineers))
+                )
+                for engineer in selected_engineers:
+                    assignment = Assignment(engineer_id=engineer.id, product_id=product.id)
+                    db.session.add(assignment)
     
     db.session.commit()
 
@@ -267,46 +302,52 @@ def calculate_dashboard_metrics():
 
 def calculate_simulation_results(data):
     """Calculate simulation results based on input parameters"""
-    # Extract parameters from input data
-    # Convert string values to appropriate types, providing default values if not present
+    # Get parameters from database
+    params = {p.key: float(p.value) for p in Parameter.query.all()}
+    
+    # Extract simulation inputs from data
     total_engineers = int(data.get('total_engineers', 40))
     total_products = int(data.get('total_products', 50))
-    hours_per_inquiry = float(data.get('hours_per_inquiry', 2))
     total_annual_inquiries = int(data.get('total_annual_inquiries', 5000))
-    inquiry_work_ratio = float(data.get('inquiry_work_ratio', 0.6))
-    annual_working_days = int(data.get('annual_working_days', 225))
-    daily_working_hours = float(data.get('daily_working_hours', 7.5))
-    max_products_per_engineer = int(data.get('max_products_per_engineer', 5))
-    min_engineers_per_product = int(data.get('min_engineers_per_product', 2))
+    
+    # Use parameters from database
+    hours_per_inquiry = params.get('hours_per_inquiry', 2.0)
+    inquiry_work_ratio = params.get('inquiry_work_ratio', 0.6)
+    annual_working_days = int(params.get('annual_working_days', 225))
+    daily_working_hours = params.get('daily_working_hours', 7.5)
+    max_products_per_engineer = int(params.get('max_products_per_engineer', 5))
+    min_engineers_per_product = int(params.get('min_engineers_per_product', 2))
     
     # Get target monthly overtime
     target_monthly_overtime = float(Parameter.query.filter_by(key="target_monthly_overtime").first().value)
     annual_overtime_hours = target_monthly_overtime * 12
     
-    # Calculate total available work hours per year (including target overtime)
-    total_available_hours = total_engineers * (annual_working_days * daily_working_hours + annual_overtime_hours)
+    # Calculate base working hours per engineer per year
+    base_hours_per_engineer = annual_working_days * daily_working_hours
+    total_base_hours = total_engineers * base_hours_per_engineer
     
-    # Calculate total hours needed for inquiries
+    # Calculate total inquiry hours needed
     total_inquiry_hours = total_annual_inquiries * hours_per_inquiry
     
-    # Total hours needed (inquiries plus other work)
-    total_hours_needed = total_inquiry_hours / inquiry_work_ratio
+    # Calculate total hours needed (including non-inquiry work)
+    total_hours_needed = total_inquiry_hours / inquiry_work_ratio if inquiry_work_ratio > 0 else float('inf')
+    
+    # Calculate total available hours (including target overtime)
+    base_hours_per_engineer = annual_working_days * daily_working_hours
+    total_base_hours = total_engineers * base_hours_per_engineer
+    total_overtime_hours = total_engineers * (target_monthly_overtime * 12)
+    total_available_hours = total_base_hours + total_overtime_hours
     
     # Calculate surplus/deficit of hours
     hours_surplus = total_available_hours - total_hours_needed
     
-    # Calculate average overtime per engineer per month
-    # 1人あたりの基本労働時間（年間）
-    base_hours_per_engineer = annual_working_days * daily_working_hours
-    
-    # 1人あたりの必要時間（年間）
-    hours_needed_per_engineer = total_hours_needed / total_engineers
-    
-    # 1人あたりの残業時間（年間）
-    annual_overtime_per_engineer = max(0, hours_needed_per_engineer - base_hours_per_engineer)
-    
-    # 月間平均残業時間
-    monthly_overtime_per_engineer = annual_overtime_per_engineer / 12
+    # Calculate overtime per engineer
+    if total_engineers > 0:
+        hours_needed_per_engineer = total_hours_needed / total_engineers
+        annual_overtime_per_engineer = max(0, hours_needed_per_engineer - base_hours_per_engineer)
+        monthly_overtime_per_engineer = annual_overtime_per_engineer / 12
+    else:
+        monthly_overtime_per_engineer = float('inf')
     
     # Calculate average products per engineer
     # First, ensure every product has minimum engineers
@@ -343,19 +384,34 @@ def calculate_simulation_results(data):
     # Calculate average inquiries per engineer
     avg_inquiries_per_engineer = total_annual_inquiries / total_engineers
     
-    # Calculate optimal engineer count based on target monthly overtime
-    target_monthly_overtime = float(Parameter.query.filter_by(key="target_monthly_overtime").first().value)
-    annual_overtime_hours = target_monthly_overtime * 12
-    optimal_engineer_count = math.ceil(
-        total_hours_needed / 
-        ((annual_working_days * daily_working_hours) + annual_overtime_hours)
-    )
+    # Calculate optimal engineer count based on total hours needed and available hours per engineer
+    annual_available_hours_per_engineer = annual_working_days * daily_working_hours
+    if annual_available_hours_per_engineer > 0:
+        base_engineer_count = math.ceil(total_hours_needed / annual_available_hours_per_engineer)
+        
+        # Adjust for maximum overtime constraint
+        if target_monthly_overtime > 0:
+            overtime_adjusted_hours = annual_available_hours_per_engineer + (target_monthly_overtime * 12)
+            optimal_engineer_count = math.ceil(total_hours_needed / overtime_adjusted_hours)
+        else:
+            optimal_engineer_count = base_engineer_count
+    else:
+        optimal_engineer_count = float('inf')
+
+    # Calculate optimal product count
+    # 1. Workload-based limit: How many products can be handled with current engineer capacity
+    if total_products > 0:
+        hours_per_product = total_hours_needed / total_products
+        workload_based_limit = math.floor((total_available_hours * inquiry_work_ratio) / hours_per_product)
+    else:
+        workload_based_limit = 0
     
-    # Calculate optimal product count based on engineer capacity
-    # This is the maximum number of products that can be fully staffed
-    # Each product needs min_engineers_per_product engineers
-    # Each engineer can handle max_products_per_engineer products
-    optimal_product_count = math.floor((total_engineers * max_products_per_engineer) / min_engineers_per_product)
+    # 2. Assignment-based limit: Maximum products that can be properly staffed
+    max_assignments = total_engineers * max_products_per_engineer
+    assignment_based_limit = math.floor(max_assignments / min_engineers_per_product)
+    
+    # Take the minimum of both limits
+    optimal_product_count = min(workload_based_limit, assignment_based_limit)
     
     return {
         'monthly_overtime_per_engineer': round(monthly_overtime_per_engineer, 1),

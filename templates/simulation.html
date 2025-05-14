@@ -40,33 +40,34 @@
                             <div class="card h-100">
                                 <div class="card-header">
                                     <h6 class="card-title mb-0">パラメータ設定</h6>
+                                    <small class="text-muted">※パラメータの編集は「パラメータ設定」画面で行ってください</small>
                                 </div>
                                 <div class="card-body">
                                     <div class="mb-3">
-                                        <label for="hours_per_inquiry" class="form-label">SRあたりの対応時間（時間）</label>
-                                        <input type="number" class="form-control" id="hours_per_inquiry" name="hours_per_inquiry" min="0.1" step="0.1" value="2" required>
+                                        <label class="form-label">SRあたりの対応時間</label>
+                                        <p class="form-control-plaintext">{{ params.get('hours_per_inquiry', '2') }}時間</p>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="inquiry_work_ratio" class="form-label">総稼働に対するSR対応割合</label>
-                                        <input type="number" class="form-control" id="inquiry_work_ratio" name="inquiry_work_ratio" min="0.1" max="1" step="0.01" value="0.6" required>
+                                        <label class="form-label">総稼働に対するSR対応割合</label>
+                                        <p class="form-control-plaintext">{{ params.get('inquiry_work_ratio', '0.6') }}</p>
                                         <div class="form-text">0.6は「稼働時間の60%がSR対応に使われる」ことを意味します</div>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="annual_working_days" class="form-label">年間稼働日数</label>
-                                        <input type="number" class="form-control" id="annual_working_days" name="annual_working_days" min="1" value="225" required>
+                                        <label class="form-label">年間稼働日数</label>
+                                        <p class="form-control-plaintext">{{ params.get('annual_working_days', '225') }}日</p>
                                         <div class="form-text">365日 - 120日(土日祝) - 20日(有給休暇) = 225日</div>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="daily_working_hours" class="form-label">1日の基本労働時間（時間）</label>
-                                        <input type="number" class="form-control" id="daily_working_hours" name="daily_working_hours" min="0.1" step="0.1" value="7.5" required>
+                                        <label class="form-label">1日の基本労働時間</label>
+                                        <p class="form-control-plaintext">{{ params.get('daily_working_hours', '7.5') }}時間</p>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="max_products_per_engineer" class="form-label">エンジニアの担当製品数上限</label>
-                                        <input type="number" class="form-control" id="max_products_per_engineer" name="max_products_per_engineer" min="1" value="5" required>
+                                        <label class="form-label">エンジニアの担当製品数上限</label>
+                                        <p class="form-control-plaintext">{{ params.get('max_products_per_engineer', '5') }}製品</p>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="min_engineers_per_product" class="form-label">製品あたりの最小担当人数</label>
-                                        <input type="number" class="form-control" id="min_engineers_per_product" name="min_engineers_per_product" min="1" value="2" required>
+                                        <label class="form-label">製品あたりの最小担当人数</label>
+                                        <p class="form-control-plaintext">{{ params.get('min_engineers_per_product', '2') }}人</p>
                                     </div>
                                 </div>
                             </div>
