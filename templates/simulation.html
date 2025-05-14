@@ -322,10 +322,10 @@
             
             // 推奨事項を生成
             let recommendation = '';
-            if (results.monthly_overtime_per_engineer > 20) {
-                recommendation += '<p>🔴 <strong>緊急:</strong> 月間残業時間が20時間を超えています。人員の追加もしくは製品の削減を検討してください。</p>';
-            } else if (results.monthly_overtime_per_engineer > 10) {
-                recommendation += '<p>🟡 <strong>注意:</strong> 月間残業時間が10時間を超えています。業務効率化または人員の増加を検討してください。</p>';
+            if (results.monthly_overtime_per_engineer > 45) {
+                recommendation += '<p>🔴 <strong>緊急:</strong> 月間残業時間が45時間を超えています。人員の追加もしくは製品の削減を検討してください。</p>';
+            } else if (results.monthly_overtime_per_engineer > 30) {
+                recommendation += '<p>🟡 <strong>注意:</strong> 月間残業時間が30時間を超えています。業務効率化または人員の増加を検討してください。</p>';
             } else {
                 recommendation += '<p>🟢 <strong>良好:</strong> 残業時間は許容範囲内です。</p>';
             }
@@ -339,16 +339,16 @@
             }
             
             if (results.understaffed_products > 0) {
-                recommendation += `<p>🔴 <strong>緊急:</strong> ${results.understaffed_products}製品が最小担当人数を満たしていません。早急に人員を割り当ててください。</p>`;
+                recommendation += `<p>🔴 <strong>緊急:</strong> エンジニアの担当製品数上限に従った場合、${results.understaffed_products}製品が最小担当人数を満たしません。</p>`;
             }
             
             if (results.avg_products_per_engineer > maxProducts) {
                 recommendation += '<p>🟡 <strong>注意:</strong> エンジニアあたりの担当製品数が上限を超えています。製品の再分配を検討してください。</p>';
             }
             
-            if (results.engineer_surplus_deficit < 0) {
+            if (results.engineer_surplus_deficit > 0) {
                 recommendation += `<p>🟡 <strong>推奨:</strong> 理想的な状態にするには、${Math.abs(results.engineer_surplus_deficit)}人のエンジニアを増員することを検討してください。</p>`;
-            } else if (results.engineer_surplus_deficit > 5) {
+            } else if (results.engineer_surplus_deficit > -5) {
                 recommendation += `<p>🟢 <strong>参考:</strong> 現状では${results.engineer_surplus_deficit}人のエンジニアに余裕があります。他の業務にリソースを割り当てることを検討できます。</p>`;
             }
             
@@ -367,7 +367,7 @@
             if (results.coverage_ratio < 1) {
                 analysis += ` 製品あたりの最小担当人数（${inputs.min_engineers_per_product}人）に対して、現状のカバー率は${Math.round(results.coverage_ratio * 100)}%です。`;
             } else {
-                analysis += ' すべての製品が最小担当人数を満たしています。';
+                analysis += ' 理想的にエンジニアを割り当てた場合、すべての製品が最小担当人数を満たします。';
             }
             
             // SR対応割合の影響を説明

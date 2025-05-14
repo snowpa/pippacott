@@ -39,12 +39,12 @@
                                 </div>
                                 <div class="card-body">
                                     {% for param in params %}
-                                    {% if param.key in ['hours_per_inquiry', 'inquiry_work_ratio', 'total_annual_inquiries', 'annual_working_days', 'daily_working_hours'] %}
+                                    {% if param.key in ['hours_per_inquiry', 'inquiry_work_ratio', 'total_annual_inquiries', 'annual_working_days', 'daily_working_hours', 'target_monthly_overtime'] %}
                                     <div class="mb-3">
                                         <label for="{{ param.key }}" class="form-label">{{ param.description }}</label>
                                         {% if param.key == 'inquiry_work_ratio' %}
                                         <input type="number" class="form-control" id="{{ param.key }}" name="param_{{ param.key }}" value="{{ param.value }}" min="0.1" max="1" step="0.01" required>
-                                        <div class="form-text">0.6は「稼働時間の60%がSR対応に使われる」ことを意味します</div>
+                                        <div class="form-text">0.6は「稼働時間の60%が問い合わせ対応に使われる」ことを意味します</div>
                                         {% elif param.key in ['hours_per_inquiry', 'daily_working_hours'] %}
                                         <input type="number" class="form-control" id="{{ param.key }}" name="param_{{ param.key }}" value="{{ param.value }}" min="0.1" step="0.1" required>
                                         {% else %}
