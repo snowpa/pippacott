@@ -152,7 +152,7 @@
                                 <div class="card-body">
                                     <div class="mb-3">
                                         <div class="d-flex justify-content-between">
-                                            <span>最適エンジニア人数（目標月間残業時間{{ params.get('target_monthly_overtime', '20') }}時間）:</span>
+                                            <span>最適エンジニア人数（目標月間残業{{ params.get('target_monthly_overtime', '20') }}時間）:</span>
                                             <span id="optimalEngineerCount" class="fw-bold"></span>
                                         </div>
                                     </div>
@@ -180,7 +180,7 @@
                                     
                                     <div class="mb-3">
                                         <div class="d-flex justify-content-between">
-                                            <span>年間稼働時間の余剰/不足:</span>
+                                            <span>年間稼働時間の余剰/不足（目標月間残業{{ params.get('target_monthly_overtime', '20') }}時間）:</span>
                                             <span id="hoursSurplusDeficit" class="fw-bold"></span>
                                         </div>
                                     </div>
