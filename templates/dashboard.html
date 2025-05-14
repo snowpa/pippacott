@@ -305,6 +305,7 @@
         const resilienceCtx = document.getElementById('resilienceChart').getContext('2d');
         new Chart(resilienceCtx, {
             type: 'bar',
+            indexAxis: 'y',  // Make bars horizontal
             data: {
                 labels: Object.keys(resilienceData),
                 datasets: [{

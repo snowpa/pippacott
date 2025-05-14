@@ -50,12 +50,20 @@ def generate_demo_data():
     # Create products with varying inquiry counts (using a power law distribution)
     total_annual_inquiries = int(Parameter.query.filter_by(key="total_annual_inquiries").first().value)
     
-    # Calculate individual product inquiry counts that follow a power law distribution
+    # Generate inquiry counts with 20% negative deviation from baseline
     inquiry_counts = []
+    min_engineers = int(Parameter.query.filter_by(key="min_engineers_per_product").first().value)
+    
     for i in range(50):
-        # Power law with exponent -1 (approximately Zipf's law)
-        inquiry_count = int((1.0 / (i + 1)) * total_annual_inquiries / 5)  # Division by 5 is a scaling factor
-        inquiry_counts.append(max(10, min(inquiry_count, 1000)))  # Cap between 10 and 1000
+        if i < 10:  # 20% of products with less than baseline
+            engineer_diff = random.randint(-3, -1)
+        else:  # 80% of products with more than baseline
+            engineer_diff = random.randint(0, 3)
+            
+        # Adjust inquiry count based on engineer difference
+        base_inquiry = total_annual_inquiries / 50  # Even distribution as base
+        inquiry_count = int(base_inquiry * (1 + engineer_diff * 0.2))  # 20% adjustment per engineer difference
+        inquiry_counts.append(max(10, min(inquiry_count, 2000)))  # Cap between 10 and 2000
     
     # Normalize to ensure total matches parameter
     total = sum(inquiry_counts)
