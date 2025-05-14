@@ -19,11 +19,11 @@ PRODUCT_TYPES = ["Manager", "Server", "Controller", "Analyzer", "Gateway", "Moni
 def initialize_default_parameters():
     """Initialize default parameters if they don't exist"""
     default_params = [
-        {"key": "min_engineers_per_product", "value": "2", "description": "製品担当エンジニアの最小人数（基準値）"},
-        {"key": "max_products_per_engineer", "value": "5", "description": "エンジニアの担当製品数最大数の目安（基準値）"},
-        {"key": "hours_per_inquiry", "value": "2", "description": "問い合わせあたりの対応時間（基準値、時間）"},
+        {"key": "min_engineers_per_product", "value": "5", "description": "製品担当エンジニアの最小人数（基準値）"},
+        {"key": "max_products_per_engineer", "value": "8", "description": "エンジニアの担当製品数最大数の目安（基準値）"},
+        {"key": "hours_per_inquiry", "value": "3.5", "description": "問い合わせあたりの対応時間（基準値、時間）"},
         {"key": "inquiry_work_ratio", "value": "0.6", "description": "総稼働に対する問い合わせ対応割合（基準値）"},
-        {"key": "total_annual_inquiries", "value": "5000", "description": "年間問い合わせ件数（基準値）"},
+        {"key": "total_annual_inquiries", "value": "17000", "description": "年間問い合わせ件数（基準値）"},
         {"key": "annual_working_days", "value": "225", "description": "エンジニアの年間稼働日数（基準値）"},
         {"key": "daily_working_hours", "value": "7.5", "description": "1日の基本労働時間（時間）"}
     ]
