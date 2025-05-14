@@ -297,7 +297,7 @@ def calculate_simulation_results(data):
     
     # Calculate average overtime per engineer per month
     if hours_surplus < 0:
-        monthly_overtime_per_engineer = abs(hours_surplus) / (total_engineers * 12)
+        monthly_overtime_per_engineer = abs(hours_surplus) / (total_engineers * 12) if hours_surplus < 0 else 0
     else:
         monthly_overtime_per_engineer = 0
     
