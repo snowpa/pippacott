@@ -203,22 +203,22 @@
 
         // エンジニア担当製品数分布グラフ
         const productCountData = {
-            '1製品': 0,
-            '2製品': 0,
-            '3製品': 0,
-            '4製品': 0,
-            '5製品': 0,
-            '6製品以上': 0
+            '0-2製品': 0,
+            '3-5製品': 0,
+            '6-8製品': 0,
+            '9-11製品': 0,
+            '12-13製品': 0,
+            '14製品以上': 0
         };
 
         engineers.forEach(engineer => {
             const count = engineer.product_count;
-            if (count === 1) productCountData['1製品']++;
-            else if (count === 2) productCountData['2製品']++;
-            else if (count === 3) productCountData['3製品']++;
-            else if (count === 4) productCountData['4製品']++;
-            else if (count === 5) productCountData['5製品']++;
-            else productCountData['6製品以上']++;
+            if (count <= 2) productCountData['0-2製品']++;
+            else if (count <= 5) productCountData['3-5製品']++;
+            else if (count <= 8) productCountData['6-8製品']++;
+            else if (count <= 11) productCountData['9-11製品']++;
+            else if (count <= 13) productCountData['12-13製品']++;
+            else productCountData['14製品以上']++;
         });
 
         const productCountCtx = document.getElementById('productCountChart').getContext('2d');
