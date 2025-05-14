@@ -11,216 +11,218 @@
             </div>
             <div class="card-body">
                 <p class="text-muted">様々なパラメータを調整して、人員配置の最適化をシミュレーションすることができます。</p>
-                
-                <form id="simulationForm" class="mb-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="card h-100">
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <form id="simulationForm" class="mb-4">
+                            <div class="card">
                                 <div class="card-header">
                                     <h6 class="card-title mb-0">リソース設定</h6>
                                 </div>
                                 <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="total_engineers" class="form-label">エンジニア総数</label>
-                                        <input type="number" class="form-control" id="total_engineers" name="total_engineers" min="1" value="40" required>
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label for="total_engineers" class="form-label">エンジニア総数</label>
+                                            <input type="number" class="form-control" id="total_engineers" name="total_engineers" min="1" value="40" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="total_products" class="form-label">製品総数</label>
+                                            <input type="number" class="form-control" id="total_products" name="total_products" min="1" value="50" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="total_annual_inquiries" class="form-label">年間SR件数</label>
+                                            <input type="number" class="form-control" id="total_annual_inquiries" name="total_annual_inquiries" min="0" value="5000" required>
+                                        </div>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="total_products" class="form-label">製品総数</label>
-                                        <input type="number" class="form-control" id="total_products" name="total_products" min="1" value="50" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="total_annual_inquiries" class="form-label">年間SR件数</label>
-                                        <input type="number" class="form-control" id="total_annual_inquiries" name="total_annual_inquiries" min="0" value="5000" required>
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                                        <button type="button" id="resetSimulation" class="btn btn-secondary">リセット</button>
+                                        <button type="submit" class="btn btn-primary">シミュレーション実行</button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="card h-100">
-                                <div class="card-header">
-                                    <h6 class="card-title mb-0">パラメータ設定</h6>
-                                    <small class="text-muted">※パラメータの編集は「パラメータ設定」画面で行ってください</small>
+                        </form>
+
+                        <div id="simulationResults" style="display: none;">
+                            <!-- 結果表示部分をここに移動 -->
+                            <div class="row g-4">
+                                <div class="col-12">
+                                    <div class="row g-4">
+                                        <div class="col-md-4">
+                                            <div class="card h-100">
+                                                <div class="card-header bg-primary text-white">
+                                                    <h6 class="card-title mb-0">稼働状況</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">月間平均残業時間</label>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span>目標: {{ params.get('target_monthly_overtime', '20') }}時間</span>
+                                                            <span id="monthlyOvertime" class="fw-bold"></span>
+                                                        </div>
+                                                        <div class="progress mt-1">
+                                                            <div id="overtimeProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label">年間対応SR数（1人あたり）</label>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span id="avgInquiriesPerEngineer" class="fw-bold"></span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label">年間稼働時間</label>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span>余剰/不足:</span>
+                                                            <span id="hoursSurplusDeficit" class="fw-bold"></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <div class="card h-100">
+                                                <div class="card-header bg-success text-white">
+                                                    <h6 class="card-title mb-0">製品担当状況</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">担当製品数（1人あたり）</label>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span id="avgProductsPerEngineer" class="fw-bold"></span>
+                                                        </div>
+                                                        <div class="progress mt-1">
+                                                            <div id="productsProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label">担当エンジニア数（1製品あたり）</label>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span id="avgEngineersPerProduct" class="fw-bold"></span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label">担当者数不足の製品</label>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span id="understaffedProducts" class="fw-bold"></span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label">担当者数基準カバー率</label>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span id="coverageRatio" class="fw-bold"></span>
+                                                        </div>
+                                                        <div class="progress mt-1">
+                                                            <div id="coverageProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <div class="card h-100">
+                                                <div class="card-header bg-info text-white">
+                                                    <h6 class="card-title mb-0">最適化提案</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">最適エンジニア人数</label>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span id="optimalEngineerCount" class="fw-bold"></span>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span>必要な増減:</span>
+                                                            <span id="engineerSurplusDeficit" class="fw-bold"></span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label">最適製品数</label>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span id="optimalProductCount" class="fw-bold"></span>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span>現状との差分:</span>
+                                                            <span id="productSurplusDeficit" class="fw-bold"></span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div id="recommendationBox" class="alert alert-warning mt-3 mb-0">
+                                                        <h6 class="alert-heading fw-bold">改善提案:</h6>
+                                                        <div id="recommendation"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label class="form-label">SRあたりの対応時間</label>
-                                        <p class="form-control-plaintext">{{ params.get('hours_per_inquiry', '2') }}時間</p>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">総稼働に対するSR対応割合</label>
-                                        <p class="form-control-plaintext">{{ params.get('inquiry_work_ratio', '0.6') }}</p>
-                                        <div class="form-text">0.6は「稼働時間の60%がSR対応に使われる」ことを意味します</div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">年間稼働日数</label>
-                                        <p class="form-control-plaintext">{{ params.get('annual_working_days', '225') }}日</p>
-                                        <div class="form-text">365日 - 120日(土日祝) - 20日(有給休暇) = 225日</div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">1日の基本労働時間</label>
-                                        <p class="form-control-plaintext">{{ params.get('daily_working_hours', '7.5') }}時間</p>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">エンジニアの担当製品数上限</label>
-                                        <p class="form-control-plaintext">{{ params.get('max_products_per_engineer', '5') }}製品</p>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">製品あたりの最小担当人数</label>
-                                        <p class="form-control-plaintext">{{ params.get('min_engineers_per_product', '2') }}人</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
-                        <button type="button" id="resetSimulation" class="btn btn-secondary">リセット</button>
-                        <button type="submit" class="btn btn-primary">シミュレーション実行</button>
-                    </div>
-                </form>
-                
-                <div id="simulationResults" style="display: none;">
-                    <hr>
-                    <h5>シミュレーション結果</h5>
-                    
-                    <div class="row mt-4">
-                        <div class="col-md-6 mb-4">
-                            <div class="card border-primary h-100">
-                                <div class="card-header bg-primary text-white">
-                                    <h6 class="card-title mb-0">人員配置の評価</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span>エンジニア1人あたりの月間平均残業時間（目標月間残業{{ params.get('target_monthly_overtime', '20') }}時間）:</span>
-                                            <span id="monthlyOvertime" class="fw-bold"></span>
-                                        </div>
-                                        <div class="progress mt-1">
-                                            <div id="overtimeProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span>エンジニア1人あたりの平均担当製品数:</span>
-                                            <span id="avgProductsPerEngineer" class="fw-bold"></span>
-                                        </div>
-                                        <div class="progress mt-1">
-                                            <div id="productsProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span>製品1つあたりの平均担当エンジニア数:</span>
-                                            <span id="avgEngineersPerProduct" class="fw-bold"></span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span>担当者数基準に対するカバー率:</span>
-                                            <span id="coverageRatio" class="fw-bold"></span>
-                                        </div>
-                                        <div class="progress mt-1">
-                                            <div id="coverageProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span>エンジニア1人あたりの年間対応SR数:</span>
-                                            <span id="avgInquiriesPerEngineer" class="fw-bold"></span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span>担当者数不足の製品数:</span>
-                                            <span id="understaffedProducts" class="fw-bold"></span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6 mb-4">
-                            <div class="card border-info h-100">
-                                <div class="card-header bg-info text-white">
-                                    <h6 class="card-title mb-0">最適化の提案</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span>最適エンジニア人数（目標月間残業{{ params.get('target_monthly_overtime', '20') }}時間）:</span>
-                                            <span id="optimalEngineerCount" class="fw-bold"></span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span>必要なエンジニア増減数:</span>
-                                            <span id="engineerSurplusDeficit" class="fw-bold"></span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span>最適製品数（最小担当人数を満たす）:</span>
-                                            <span id="optimalProductCount" class="fw-bold"></span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span>現状との製品数差分:</span>
-                                            <span id="productSurplusDeficit" class="fw-bold"></span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span>年間稼働時間の余剰/不足:</span>
-                                            <span id="hoursSurplusDeficit" class="fw-bold"></span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div id="recommendationBox" class="alert alert-warning mt-3">
-                                        <h6 class="alert-heading fw-bold">最適化の提案:</h6>
-                                        <div id="recommendation"></div>
-                                    </div>
-                                    
-                                    <div class="alert alert-info mt-3">
+
+                                <div class="col-12">
+                                    <div class="alert alert-info mb-0">
                                         <h6 class="alert-heading fw-bold">注意事項: SR対応割合の影響</h6>
                                         <p class="mb-0">エンジニアの稼働時間のうち、「総稼働に対すSR対応割合」で指定された割合だけがSR対応に使われると想定しています。残りの時間は他の業務（開発や研修など）に使用されます。この割合を下げると、同じSR数に対して必要なエンジニア数が増加します。</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="card-title mb-0">考察</h6>
+
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">パラメータ設定値</h6>
+                                <small class="text-muted">※パラメータの編集は「パラメータ設定」画面で行ってください</small>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <h6 class="fw-bold">リソース設定</h6>
+                                    <div class="ms-3">
+                                        <p class="mb-1">製品担当エンジニアの最小人数：{{ params.get('min_engineers_per_product', '5') }}人</p>
+                                        <p class="mb-1">エンジニアの担当製品数上限：{{ params.get('max_products_per_engineer', '8') }}製品</p>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <p id="analysisText" class="mb-0"></p>
-                                    <div class="mt-3">
-                                        <h6 class="fw-bold">計算の内訳:</h6>
-                                        <ul>
-                                            <li><strong>年間必要工数</strong> = 年間SR件数 × SRあたりの対応時間</li>
-                                            <li><strong>総必要工数</strong> = 年間必要工数 ÷SR対応割合 <small class="text-muted">（SR対応以外の業務時間を含む）</small></li>
-                                            <li><strong>最適エンジニア数</strong> = 総必要工数 ÷ (年間稼働日数 × 日勤務時間 + 年間目標残業時間)</li>
-                                            <li><strong>最適製品数</strong> = (エンジニア数 × 担当製品数上限) ÷ 製品あたり最小担当人数</li>
-                                        </ul>
+                                <div class="mb-0">
+                                    <h6 class="fw-bold">稼働設定</h6>
+                                    <div class="ms-3">
+                                        <p class="mb-1">SR対応時間：{{ params.get('hours_per_inquiry', '3.5') }}時間/件</p>
+                                        <p class="mb-1">SR対応割合：{{ (params.get('inquiry_work_ratio', '0.6')|float * 100)|int }}%</p>
+                                        <p class="mb-1">年間稼働日数：{{ params.get('annual_working_days', '225') }}日</p>
+                                        <p class="mb-1">1日の稼働時間：{{ params.get('daily_working_hours', '7.5') }}時間</p>
+                                        <p class="mb-1">目標月間残業時間：{{ params.get('target_monthly_overtime', '20') }}時間</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 考察セクション -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">考察</h6>
+            </div>
+            <div class="card-body">
+                <p id="analysisText" class="mb-0"></p>
+                <div class="mt-3">
+                    <h6 class="fw-bold">計算の内訳:</h6>
+                    <ul>
+                        <li><strong>年間必要工数</strong> = 年間SR件数 × SRあたりの対応時間</li>
+                        <li><strong>総必要工数</strong> = 年間必要工数 ÷SR対応割合 <small class="text-muted">（SR対応以外の業務時間を含む）</small></li>
+                        <li><strong>最適エンジニア数</strong> = 総必要工数 ÷ (年間稼働日数 × 日勤務時間 + 年間目標残業時間)</li>
+                        <li><strong>最適製品数</strong> = (エンジニア数 × 担当製品数上限) ÷ 製品あたり最小担当人数</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
                 </div>
             </div>
         </div>
@@ -238,33 +240,33 @@
             $('#{{ key }}').val('{{ value }}');
         }
         {% endfor %}
-        
+
         // リセットボタン
         $('#resetSimulation').click(function() {
             // フォームをリセット
             $('#simulationForm')[0].reset();
-            
+
             // パラメータの初期値をセット
             {% for key, value in params.items() %}
             if ($('#{{ key }}').length) {
                 $('#{{ key }}').val('{{ value }}');
             }
             {% endfor %}
-            
+
             // 結果を非表示
             $('#simulationResults').hide();
         });
-        
+
         // シミュレーション実行
         $('#simulationForm').submit(function(e) {
             e.preventDefault();
-            
+
             // フォームデータをJSON化
             const formData = {};
             $(this).serializeArray().forEach(function(item) {
                 formData[item.name] = item.value;
             });
-            
+
             // シミュレーション実行APIを呼び出し
             $.ajax({
                 url: '/simulation/run',
@@ -280,7 +282,7 @@
                 }
             });
         });
-        
+
         // 結果表示関数
         function displayResults(results, inputs) {
             // 基本情報
@@ -290,14 +292,14 @@
             $('#coverageRatio').text(results.coverage_ratio);
             $('#avgInquiriesPerEngineer').text(results.avg_inquiries_per_engineer);
             $('#understaffedProducts').text(results.understaffed_products);
-            
+
             // 最適化提案
             $('#optimalEngineerCount').text(results.optimal_engineer_count + ' 人');
             $('#engineerSurplusDeficit').text(results.engineer_surplus_deficit + ' 人');
             $('#optimalProductCount').text(results.optimal_product_count + ' 製品');
             $('#productSurplusDeficit').text(results.product_surplus_deficit + ' 製品');
             $('#hoursSurplusDeficit').text(results.hours_surplus_deficit + ' 時間');
-            
+
             // プログレスバーを更新
             // 残業時間プログレスバー (目標値を基準にパーセンテージ計算)
             const targetOvertime = {{ params.get('target_monthly_overtime', '20') }};
@@ -306,7 +308,7 @@
                 .css('width', overtimePercent + '%')
                 .removeClass('bg-success bg-warning bg-danger')
                 .addClass(getProgressBarClass(results.monthly_overtime_per_engineer, 0, targetOvertime * 1, targetOvertime));
-            
+
             // 担当製品数プログレスバー
             const maxProducts = parseInt(inputs.max_products_per_engineer);
             const productsPercent = Math.min(100, (results.avg_products_per_engineer / maxProducts) * 100);
@@ -314,14 +316,14 @@
                 .css('width', productsPercent + '%')
                 .removeClass('bg-success bg-warning bg-danger')
                 .addClass(getProgressBarClass(results.avg_products_per_engineer, 0, maxProducts * 1, maxProducts));
-            
+
             // カバー率プログレスバー
             const coveragePercent = Math.min(100, results.coverage_ratio * 100);
             $('#coverageProgress')
                 .css('width', coveragePercent + '%')
                 .removeClass('bg-success bg-warning bg-danger')
                 .addClass(getProgressBarClass(results.coverage_ratio, 1, 0.8, 0.5, true));
-            
+
             // 推奨事項を生成
             let recommendation = '';
             if (results.monthly_overtime_per_engineer > 45) {
@@ -331,7 +333,7 @@
             } else {
                 recommendation += '<p>🟢 <strong>良好:</strong> 残業時間は許容範囲内です。</p>';
             }
-            
+
             // SR対応割合に基づく推奨事項を追加
             const workRatioValue = parseFloat(inputs.inquiry_work_ratio);
             if (workRatioValue < 0.5) {
@@ -339,23 +341,23 @@
             } else if (workRatioValue > 0.8) {
                 recommendation += `<p>📊 <strong>注意:</strong> SR対応割合が${Math.round(workRatioValue * 100)}%と高めです。エンジニアの大半の時間がSR対応に使われる想定ですが、開発やトレーニングなど他の業務の時間が十分確保できるか確認してください。</p>`;
             }
-            
+
             if (results.understaffed_products > 0) {
                 recommendation += `<p>🔴 <strong>緊急:</strong> エンジニアの担当製品数上限に従った場合、${results.understaffed_products}製品が最小担当人数を満たしません。</p>`;
             }
-            
+
             if (results.avg_products_per_engineer > maxProducts) {
                 recommendation += '<p>🟡 <strong>注意:</strong> エンジニアあたりの担当製品数が上限を超えています。製品の再分配を検討してください。</p>';
             }
-            
+
             if (results.engineer_surplus_deficit > 0) {
                 recommendation += `<p>🟡 <strong>推奨:</strong> 理想的な状態にするには、${Math.abs(results.engineer_surplus_deficit)}人のエンジニアを増員することを検討してください。</p>`;
             } else if (results.engineer_surplus_deficit > -5) {
                 recommendation += `<p>🟢 <strong>参考:</strong> 現状では${results.engineer_surplus_deficit}人のエンジニアに余裕があります。他の業務にリソースを割り当てることを検討できます。</p>`;
             }
-            
+
             $('#recommendation').html(recommendation);
-            
+
             // 考察テキスト
             let analysis = '';
             if (results.monthly_overtime_per_engineer > 0) {
@@ -363,31 +365,31 @@
             } else {
                 analysis += '現在の設定では、残業は発生しない見込みです。';
             }
-            
+
             analysis += ` エンジニア1人あたり平均${results.avg_products_per_engineer}製品を担当し、製品1つあたり平均${results.avg_engineers_per_product}人のエンジニアが割り当てられています。`;
-            
+
             if (results.coverage_ratio < 1) {
                 analysis += ` 製品あたりの最小担当人数（${inputs.min_engineers_per_product}人）に対して、現状のカバー率は${Math.round(results.coverage_ratio * 100)}%です。`;
             } else {
                 analysis += ' 理想的にエンジニアを割り当てた場合、すべての製品が最小担当人数を満たします。';
             }
-            
+
             // SR対応割合の影響を説明
             const workRatio = parseFloat(inputs.inquiry_work_ratio);
             analysis += ` なお、SR対応割合は${Math.round(workRatio * 100)}%に設定されており、エンジニアの稼働時間のうち${Math.round(workRatio * 100)}%のみがSR対応に使われると想定しています。`;
-            
+
             if (results.hours_surplus_deficit < 0) {
                 analysis += ` 年間では約${Math.abs(results.hours_surplus_deficit)}時間の稼働時間が不足しています。これは${Math.abs(results.engineer_surplus_deficit)}人分のリソースに相当します。`;
             } else {
                 analysis += ` 年間では約${results.hours_surplus_deficit}時間の稼働時間に余裕があります。`;
             }
-            
+
             $('#analysisText').text(analysis);
-            
+
             // 結果を表示
             $('#simulationResults').show();
         }
-        
+
         // プログレスバーの色を決定する関数
         function getProgressBarClass(value, goodThreshold, warningThreshold, dangerThreshold, inverse = false) {
             if (inverse) {
