@@ -18,9 +18,19 @@
         height: 18px;
     }
 
+    .filters-container {
+        position: sticky;
+        top: 0;
+        background-color: var(--bs-body-bg);
+        z-index: 20;
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
     .table-container {
-        overflow-x: auto;
-        max-height: 600px;
+        height: calc(100vh - 250px);
+        overflow: auto;
+        position: relative;
     }
 
     .sticky-header th {
@@ -28,13 +38,44 @@
         top: 0;
         background-color: var(--bs-body-bg);
         z-index: 10;
+        height: 100px;
     }
 
     .sticky-first-col {
         position: sticky;
         left: 0;
         background-color: var(--bs-body-bg);
-        z-index: 5;
+        z-index: 15;
+        min-width: 200px;
+        box-shadow: 2px 0 5px -2px rgba(0,0,0,0.1);
+    }
+
+    .assignment-cell {
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        padding: 0 !important;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .assignment-checkbox {
+        width: 24px;
+        height: 24px;
+    }
+
+    .product-header {
+        white-space: nowrap;
+        width: 40px;
+        padding: 0.5rem !important;
+    }
+
+    .product-name {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        transform: rotate(180deg);
+        white-space: nowrap;
+        padding: 0.5rem;
     }
 
     .loading-overlay {
@@ -89,8 +130,8 @@
                     </div>
                 </div>
             </div>
-            <div class="card-body">
-                <div class="row mb-3">
+            <div class="card-body p-0">
+                <div class="filters-container">
                     <div class="col-md-6">
                         <div class="input-group">
                             <input type="text" class="form-control" id="engineerFilter" placeholder="エンジニア名で検索...">
