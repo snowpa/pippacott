@@ -1,146 +1,177 @@
-{% extends "layout.html" %}
+{% extends 'base.html' %}
+
+{% block title %}エンジニア管理{% endblock %}
 
 {% block content %}
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-  <h1 class="h3 mb-0">エンジニア管理</h1>
-  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEngineerModal">
-    <i class="fas fa-plus fa-sm"></i> 新規エンジニア追加
-  </button>
-</div>
-
-<!-- エンジニア一覧 -->
-<div class="card border-0 shadow mb-4">
-  <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-    <h6 class="m-0 font-weight-bold">エンジニア一覧</h6>
-    <!-- 部署フィルター -->
-    <div class="form-group mb-0">
-      <select class="form-select form-select-sm" id="departmentFilter">
-        <option value="all" selected>全ての部署</option>
-        {% for department in departments %}
-          <option value="{{ department.id }}">{{ department.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-  </div>
-  <div class="card-body">
-    <div class="table-responsive">
-      <table class="table table-bordered datatable" id="engineersTable" width="100%" cellspacing="0">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>氏名</th>
-            <th>所属部署</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for engineer in engineers %}
-          <tr>
-            <td>{{ engineer.id }}</td>
-            <td>{{ engineer.name }}</td>
-            <td>{{ engineer.department.name }}</td>
-            <td class="action-buttons">
-              <button class="btn btn-sm btn-info"
-                      data-bs-toggle="modal" 
-                      data-bs-target="#editEngineerModal"
-                      data-id="{{ engineer.id }}"
-                      data-name="{{ engineer.name }}"
-                      data-department-id="{{ engineer.department_id }}">
-                <i class="fas fa-edit"></i>
-              </button>
-              <form class="d-inline" action="{{ url_for('delete_engineer', id=engineer.id) }}" method="POST" 
-                    onsubmit="return confirmDelete(event, 'エンジニア「{{ engineer.name }}」を削除してもよろしいですか？')">
-                <button type="submit" class="btn btn-sm btn-danger">
-                  <i class="fas fa-trash"></i>
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">エンジニア一覧</h5>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addEngineerModal">
+                    <i class="fas fa-plus me-2"></i>新規エンジニア追加
                 </button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="engineersTable" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>エンジニア名</th>
+                                <th>所属課</th>
+                                <th>担当製品数</th>
+                                <th>作成日</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for engineer in engineers %}
+                            <tr>
+                                <td>{{ engineer.id }}</td>
+                                <td>{{ engineer.name }}</td>
+                                <td>{{ engineer.department }}</td>
+                                <td>{{ engineer.assignments|length }}</td>
+                                <td>{{ engineer.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary edit-engineer-btn" 
+                                            data-id="{{ engineer.id }}"
+                                            data-name="{{ engineer.name }}"
+                                            data-department="{{ engineer.department }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger delete-engineer-btn" 
+                                            data-id="{{ engineer.id }}"
+                                            data-name="{{ engineer.name }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
-<!-- 新規エンジニア追加モーダル -->
+<!-- Add Engineer Modal -->
 <div class="modal fade" id="addEngineerModal" tabindex="-1" aria-labelledby="addEngineerModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addEngineerModalLabel">新規エンジニア追加</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="addEngineerForm" action="{{ url_for('add_engineer') }}" method="POST" class="needs-validation" novalidate>
-          {{ form.csrf_token }}
-          <div class="mb-3">
-            <label for="name" class="form-label">氏名</label>
-            <input type="text" class="form-control" id="name" name="name" required>
-            <div class="invalid-feedback">
-              氏名を入力してください。
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addEngineerModalLabel">新規エンジニア追加</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-          </div>
-          <div class="mb-3">
-            <label for="department_id" class="form-label">所属部署</label>
-            <select class="form-select" id="department_id" name="department_id" required>
-              <option value="" selected disabled>部署を選択してください</option>
-              {% for department in departments %}
-                <option value="{{ department.id }}">{{ department.name }}</option>
-              {% endfor %}
-            </select>
-            <div class="invalid-feedback">
-              所属部署を選択してください。
-            </div>
-          </div>
-          <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary">保存</button>
-          </div>
-        </form>
-      </div>
+            <form action="{{ url_for('add_engineer') }}" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">エンジニア名</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="department" class="form-label">所属課名</label>
+                        <input type="text" class="form-control" id="department" name="department" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="submit" class="btn btn-primary">追加</button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
 </div>
 
-<!-- エンジニア編集モーダル -->
+<!-- Edit Engineer Modal -->
 <div class="modal fade" id="editEngineerModal" tabindex="-1" aria-labelledby="editEngineerModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="editEngineerModalLabel">エンジニア編集</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="editEngineerForm" action="" method="POST" class="needs-validation" novalidate>
-          {{ form.csrf_token }}
-          <div class="mb-3">
-            <label for="editEngineerName" class="form-label">氏名</label>
-            <input type="text" class="form-control" id="editEngineerName" name="name" required>
-            <div class="invalid-feedback">
-              氏名を入力してください。
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editEngineerModalLabel">エンジニア情報編集</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-          </div>
-          <div class="mb-3">
-            <label for="editEngineerDepartment" class="form-label">所属部署</label>
-            <select class="form-select" id="editEngineerDepartment" name="department_id" required>
-              {% for department in departments %}
-                <option value="{{ department.id }}">{{ department.name }}</option>
-              {% endfor %}
-            </select>
-            <div class="invalid-feedback">
-              所属部署を選択してください。
-            </div>
-          </div>
-          <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary">更新</button>
-          </div>
-        </form>
-      </div>
+            <form id="editEngineerForm" action="" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_name" class="form-label">エンジニア名</label>
+                        <input type="text" class="form-control" id="edit_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_department" class="form-label">所属課名</label>
+                        <input type="text" class="form-control" id="edit_department" name="department" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
+</div>
+
+<!-- Delete Engineer Modal -->
+<div class="modal fade" id="deleteEngineerModal" tabindex="-1" aria-labelledby="deleteEngineerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteEngineerModalLabel">エンジニア削除確認</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>以下のエンジニアを削除してもよろしいですか？</p>
+                <p id="delete_engineer_name" class="fw-bold text-danger"></p>
+                <p class="text-danger">注意: この操作は元に戻せません。このエンジニアの全ての担当割り当ても削除されます。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                <form id="deleteEngineerForm" action="" method="post">
+                    <button type="submit" class="btn btn-danger">削除</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/engineers.js') }}"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#engineersTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/ja.json'
+            },
+            order: [[0, 'asc']], // Sort by ID by default
+            pageLength: 10
+        });
+        
+        // Edit Engineer
+        $('.edit-engineer-btn').click(function() {
+            const id = $(this).data('id');
+            const name = $(this).data('name');
+            const department = $(this).data('department');
+            
+            $('#edit_name').val(name);
+            $('#edit_department').val(department);
+            $('#editEngineerForm').attr('action', `/engineers/edit/${id}`);
+            
+            $('#editEngineerModal').modal('show');
+        });
+        
+        // Delete Engineer
+        $('.delete-engineer-btn').click(function() {
+            const id = $(this).data('id');
+            const name = $(this).data('name');
+            
+            $('#delete_engineer_name').text(name);
+            $('#deleteEngineerForm').attr('action', `/engineers/delete/${id}`);
+            
+            $('#deleteEngineerModal').modal('show');
+        });
+    });
+</script>
 {% endblock %}

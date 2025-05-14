@@ -1,127 +1,363 @@
-{% extends "layout.html" %}
+{% extends 'base.html' %}
+
+{% block title %}担当割り当て管理{% endblock %}
+
+{% block head %}
+<style>
+    .assignment-cell {
+        cursor: pointer;
+        width: 28px;
+        height: 28px;
+        padding: 0 !important;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .assignment-checkbox {
+        width: 18px;
+        height: 18px;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        max-height: 600px;
+    }
+
+    .sticky-header th {
+        position: sticky;
+        top: 0;
+        background-color: var(--bs-body-bg);
+        z-index: 10;
+    }
+
+    .sticky-first-col {
+        position: sticky;
+        left: 0;
+        background-color: var(--bs-body-bg);
+        z-index: 5;
+    }
+
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .product-header {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 150px; /* Adjust as needed */
+        max-width: 200px; /* Adjust as needed */
+        vertical-align: top; /* Align content to the top */
+    }
+
+    .product-name {
+        font-weight: bold;
+    }
+
+    .vendor-name {
+        font-size: 0.8em;
+        color: #6c757d; /* Bootstrap's secondary text color */
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-  <h1 class="h3 mb-0">担当割り当て</h1>
-</div>
-
-<!-- 担当割り当て一覧 -->
-<div class="card border-0 shadow mb-4">
-  <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-    <h6 class="m-0 font-weight-bold">エンジニアと製品の担当関係</h6>
-    <!-- 部署フィルター -->
-    <div class="form-group mb-0">
-      <select class="form-select form-select-sm" id="assignmentDepartmentFilter">
-        <option value="all" selected>全ての部署</option>
-        {% for engineer in engineers | groupby('department.name') %}
-          <option value="{{ engineer.grouper }}">{{ engineer.grouper }}</option>
-        {% endfor %}
-      </select>
-    </div>
-  </div>
-  <div class="card-body">
-    <div class="table-responsive">
-      <table class="table table-bordered datatable" id="assignmentsTable" width="100%" cellspacing="0">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>エンジニア名</th>
-            <th>所属部署</th>
-            <th>担当製品数</th>
-            <th>担当製品</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for engineer in engineers %}
-          <tr data-engineer-id="{{ engineer.id }}">
-            <td>{{ engineer.id }}</td>
-            <td>{{ engineer.name }}</td>
-            <td>{{ engineer.department.name }}</td>
-            <td class="product-count">{{ engineer.products | length }}</td>
-            <td>
-              <button class="btn btn-sm btn-primary select-products-btn"
-                      data-engineer-id="{{ engineer.id }}"
-                      data-engineer-name="{{ engineer.name }}"
-                      data-product-ids="{{ engineer.products | map(attribute='id') | list | tojson }}">
-                <i class="fas fa-tasks me-1"></i> 担当製品選択
-              </button>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- 製品割り当て説明 -->
-<div class="card border-0 shadow mb-4">
-  <div class="card-header py-3">
-    <h6 class="m-0 font-weight-bold">製品担当について</h6>
-  </div>
-  <div class="card-body">
-    <div class="row align-items-center">
-      <div class="col-md-6">
-        <h5>効率的な製品担当の割り当てのポイント:</h5>
-        <ul>
-          <li>エンジニア1人あたりの担当製品数が多すぎないようにする</li>
-          <li>製品ごとに十分なエンジニアを割り当てる</li>
-          <li>エンジニアの専門性を考慮する</li>
-          <li>問い合わせ数の多い製品には優先的に人員を割り当てる</li>
-          <li>チーム全体で負荷を均等化する</li>
-        </ul>
-        <p class="text-muted">「担当製品選択」ボタンをクリックして、各エンジニアの担当製品を設定してください。</p>
-      </div>
-      <div class="col-md-6">
-        <img src="https://pixabay.com/get/g492231ac2941918c018ecdea60b1f51f7228d60c9bef41c1c6fd125fee814af07efcf7294770207865693a3e5dbc554ca817dea0875af1f7931c239f9d5b725f_1280.jpg" class="img-fluid rounded" alt="オフィスワークプレイス">
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- 製品選択モーダル -->
-<div class="modal fade" id="productSelectModal" tabindex="-1" aria-labelledby="productSelectModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="productSelectModalLabel">担当製品選択</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-search"></i></span>
-            <input type="text" class="form-control" id="productFilter" placeholder="製品名で検索...">
-          </div>
-        </div>
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <button class="btn btn-sm btn-outline-secondary" id="selectAllProductsBtn">
-            <i class="fas fa-check-square me-1"></i> 全選択/全解除
-          </button>
-          <span class="badge bg-primary rounded-pill">選択中: <span id="selectedProductsCount">0</span> 製品</span>
-        </div>
-        <div class="row product-selection-container">
-          {% for product in products %}
-          <div class="col-md-6 product-checkbox-wrapper">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" value="{{ product.id }}" id="product{{ product.id }}">
-              <label class="form-check-label" for="product{{ product.id }}">
-                {{ product.name }} ({{ product.vendor }})
-              </label>
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">担当割り当て管理</h5>
+                <div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="highlightMinimumEngineers" checked>
+                        <label class="form-check-label" for="highlightMinimumEngineers">最小担当人数未満をハイライト</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="highlightMaxProducts" checked>
+                        <label class="form-check-label" for="highlightMaxProducts">担当製品数超過をハイライト</label>
+                    </div>
+                </div>
             </div>
-          </div>
-          {% endfor %}
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="engineerFilter" placeholder="エンジニア名で検索...">
+                            <button class="btn btn-outline-secondary" type="button" id="clearEngineerFilter">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="productFilter" placeholder="製品名で検索...">
+                            <button class="btn btn-outline-secondary" type="button" id="clearProductFilter">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container position-relative">
+                    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+                        <div>
+                            <div class="spinner-border" role="status"></div>
+                            <span class="ms-2">更新中...</span>
+                        </div>
+                    </div>
+
+                    <table id="assignmentTable" class="table table-sm table-hover">
+                        <thead class="sticky-header">
+                            <tr>
+                                <th class="sticky-first-col" style="min-width: 200px;">エンジニア / 製品</th>
+                                {% for product in products %}
+                                <th class="text-center product-header" data-product-id="{{ product.id }}" title="{{ product.name }} ({{ product.vendor }})">
+                                    <div class="product-name">{{ product.name }}</div>
+                                    <div class="small text-muted">({{ product.assignments|length }})</div>
+                                    <div class="small text-muted vendor-name">{{ product.vendor }}</div>
+                                </th>
+                                {% endfor %}
+                                <th class="text-center sticky-right-col">合計</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for engineer in engineers %}
+                            <tr data-engineer-id="{{ engineer.id }}">
+                                <td class="sticky-first-col">
+                                    <div>{{ engineer.name }}</div>
+                                    <div class="small text-muted">{{ engineer.department }}</div>
+                                </td>
+                                {% for product in products %}
+                                <td class="assignment-cell" 
+                                    data-engineer-id="{{ engineer.id }}" 
+                                    data-product-id="{{ product.id }}"
+                                    data-assigned="{{ 1 if (engineer.id, product.id) in assignment_set else 0 }}">
+                                    <div class="assignment-indicator">
+                                        <input type="checkbox" class="assignment-checkbox" 
+                                               {% if (engineer.id, product.id) in assignment_set %}checked{% endif %}>
+                                        <span class="checkmark"></span>
+                                    </div>
+                                </td>
+                                {% endfor %}
+                                <td class="text-center fw-bold product-count" data-count="{{ engineer_assignments[engineer.id] }}">
+                                    {{ engineer_assignments[engineer.id] }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th class="sticky-first-col">合計</th>
+                                {% for product in products %}
+                                <th class="text-center engineer-count" data-count="{{ product_assignments[product.id] }}">
+                                    {{ product_assignments[product.id] }}
+                                </th>
+                                {% endfor %}
+                                <th class="text-center">-</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="mt-3">
+                    <p><strong>凡例:</strong></p>
+                    <div class="d-flex gap-3">
+                        <div>
+                            <span class="badge bg-warning">黄色</span> 製品の担当者数が最小数未満
+                        </div>
+                        <div>
+                            <span class="badge bg-danger">赤色</span> エンジニアの担当製品数が上限超過
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
-        <button type="button" class="btn btn-primary" id="saveProductsBtn">保存</button>
-      </div>
     </div>
-  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/assignments.js') }}"></script>
+<script>
+    $(document).ready(function() {
+        const minEngineersPerProduct = 2; // パラメータから取得すべき
+        const maxProductsPerEngineer = 5; // パラメータから取得すべき
+
+        // ハイライト機能の初期化
+        function updateHighlights() {
+            // 最小担当人数未満のハイライト
+            if ($('#highlightMinimumEngineers').is(':checked')) {
+                $('.engineer-count').each(function() {
+                    const count = parseInt($(this).data('count'));
+                    if (count < minEngineersPerProduct) {
+                        $(this).addClass('bg-warning');
+                    } else {
+                        $(this).removeClass('bg-warning');
+                    }
+                });
+            } else {
+                $('.engineer-count').removeClass('bg-warning');
+            }
+
+            // 担当製品数超過のハイライト
+            if ($('#highlightMaxProducts').is(':checked')) {
+                $('.product-count').each(function() {
+                    const count = parseInt($(this).data('count'));
+                    if (count > maxProductsPerEngineer) {
+                        $(this).addClass('bg-danger');
+                    } else {
+                        $(this).removeClass('bg-danger');
+                    }
+                });
+            } else {
+                $('.product-count').removeClass('bg-danger');
+            }
+        }
+
+        // 初期ハイライト
+        updateHighlights();
+
+        // ハイライト切り替え
+        $('#highlightMinimumEngineers, #highlightMaxProducts').change(function() {
+            updateHighlights();
+        });
+
+        // 担当割り当てのクリック処理
+        $('.assignment-cell').click(function() {
+            const cell = $(this);
+            const checkbox = cell.find('.assignment-checkbox');
+            const engineerId = cell.data('engineer-id');
+            const productId = cell.data('product-id');
+            const isCurrentlyAssigned = checkbox.prop('checked');
+
+            // チェックボックスの状態を切り替え（ただしUIのみ）
+            checkbox.prop('checked', !isCurrentlyAssigned);
+
+            // ローディングオーバーレイを表示
+            $('#loadingOverlay').show();
+
+            // APIを呼び出して担当割り当てを更新
+            $.ajax({
+                url: '/assignments/update',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    engineer_id: engineerId,
+                    product_id: productId,
+                    is_assigned: !isCurrentlyAssigned
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        // データ属性を更新
+                        cell.data('assigned', !isCurrentlyAssigned ? 1 : 0);
+
+                        // カウントを更新
+                        const engineerRow = $(`tr[data-engineer-id="${engineerId}"]`);
+                        const productCol = $(`th[data-product-id="${productId}"]`).index();
+
+                        // エンジニアの担当製品数を更新
+                        const productCountCell = engineerRow.find('.product-count');
+                        let productCount = parseInt(productCountCell.data('count'));
+                        if (!isCurrentlyAssigned) {
+                            productCount++;
+                        } else {
+                            productCount--;
+                        }
+                        productCountCell.text(productCount);
+                        productCountCell.data('count', productCount);
+
+                        // 製品の担当者数を更新
+                        const engineerCountCell = $('tfoot .engineer-count').eq(productCol - 1);
+                        let engineerCount = parseInt(engineerCountCell.data('count'));
+                        if (!isCurrentlyAssigned) {
+                            engineerCount++;
+                        } else {
+                            engineerCount--;
+                        }
+                        engineerCountCell.text(engineerCount);
+                        engineerCountCell.data('count', engineerCount);
+
+                        // ハイライトを更新
+                        updateHighlights();
+                    } else {
+                        // エラーが発生した場合は元の状態に戻す
+                        checkbox.prop('checked', isCurrentlyAssigned);
+                        alert('エラー: ' + response.error);
+                    }
+                },
+                error: function() {
+                    // エラーが発生した場合は元の状態に戻す
+                    checkbox.prop('checked', isCurrentlyAssigned);
+                    alert('サーバーとの通信に失敗しました。');
+                },
+                complete: function() {
+                    // ローディングオーバーレイを非表示
+                    $('#loadingOverlay').hide();
+                }
+            });
+        });
+
+        // エンジニアフィルター
+        $('#engineerFilter').on('keyup', function() {
+            const value = $(this).val().toLowerCase();
+            $('tbody tr').filter(function() {
+                const text = $(this).find('td:first').text().toLowerCase();
+                $(this).toggle(text.indexOf(value) > -1);
+            });
+        });
+
+        // 製品フィルター
+        $('#productFilter').on('keyup', function() {
+            const value = $(this).val().toLowerCase();
+            const indices = [];
+
+            // 製品名に一致する列のインデックスを収集
+            $('thead th').each(function(index) {
+                if (index > 0 && index < $('thead th').length - 1) {
+                    const text = $(this).attr('title').toLowerCase();
+                    if (text.indexOf(value) > -1) {
+                        indices.push(index);
+                    }
+                }
+            });
+
+            // すべての列を非表示
+            $('tr').find('td:not(:first-child), th:not(:first-child):not(:last-child)').css('display', 'none');
+
+            // 一致する列と最後の列を表示
+            $('tr').find('td:last-child, th:last-child').css('display', 'table-cell');
+
+            indices.forEach(function(index) {
+                $('tr').find(`td:eq(${index}), th:eq(${index})`).css('display', 'table-cell');
+            });
+
+            // フィルターが空の場合はすべて表示
+            if (value === '') {
+                $('tr').find('td, th').css('display', 'table-cell');
+            }
+        });
+
+        // フィルタークリア
+        $('#clearEngineerFilter').click(function() {
+            $('#engineerFilter').val('');
+            $('tbody tr').show();
+        });
+
+        $('#clearProductFilter').click(function() {
+            $('#productFilter').val('');
+            $('tr').find('td, th').css('display', 'table-cell');
+        });
+    });
+</script>
 {% endblock %}

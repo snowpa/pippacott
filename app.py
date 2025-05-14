@@ -5,24 +5,39 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 
+# Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
+# Create database base class
 class Base(DeclarativeBase):
     pass
 
+# Initialize database
 db = SQLAlchemy(model_class=Base)
-# create the app
+
+# Create Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
 
-# configure the database to use SQLite
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///workforce.db"
+# Configure SQLite database
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///workforce_planning.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-# initialize the app with the extension
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_recycle": 300,
+    "pool_pre_ping": True,
+}
+
+# Initialize database with app
 db.init_app(app)
 
+# Create all tables
 with app.app_context():
-    # Make sure to import the models here or their tables won't be created
-    import models  # noqa: F401
+    # Import models
+    from models import Engineer, Product, Assignment, Parameter
     
+    # Create tables
     db.create_all()
+    
+    # Initialize default parameters if they don't exist
+    from utils import initialize_default_parameters
+    initialize_default_parameters()

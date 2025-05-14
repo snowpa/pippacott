@@ -1,204 +1,378 @@
-{% extends "layout.html" %}
+{% extends 'base.html' %}
+
+{% block title %}ダッシュボード{% endblock %}
 
 {% block content %}
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-  <h1 class="h3 mb-0">ダッシュボード</h1>
-</div>
-
-<!-- 全体の充足率 -->
-<div class="row">
-  <div class="col-xl-3 col-md-6 mb-4">
-    <div class="card border-0 shadow h-100 py-2">
-      <div class="card-body">
-        <div class="row no-gutters align-items-center">
-          <div class="col">
-            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">全体の充足率</div>
-            <div class="position-relative">
-              <canvas id="overallSufficiencyChart" height="150" data-sufficiency="{{ overall_sufficiency }}"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="col-xl-3 col-md-6 mb-4">
-    <div class="card border-0 shadow h-100 py-2">
-      <div class="card-body">
-        <div class="row no-gutters align-items-center">
-          <div class="col">
-            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">総エンジニア数</div>
-            <div class="h5 mb-0 font-weight-bold">{{ total_engineers }}人</div>
-          </div>
-          <div class="col-auto">
-            <i class="fas fa-user-tie fa-2x text-gray-300"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-xl-3 col-md-6 mb-4">
-    <div class="card border-0 shadow h-100 py-2">
-      <div class="card-body">
-        <div class="row no-gutters align-items-center">
-          <div class="col">
-            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">総製品数</div>
-            <div class="h5 mb-0 font-weight-bold">{{ total_products }}製品</div>
-          </div>
-          <div class="col-auto">
-            <i class="fas fa-microchip fa-2x text-gray-300"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-xl-3 col-md-6 mb-4">
-    <div class="card border-0 shadow h-100 py-2">
-      <div class="card-body">
-        <div class="row no-gutters align-items-center">
-          <div class="col">
-            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">平均残業時間</div>
-            <div class="h5 mb-0 font-weight-bold">
-              {% if engineers_data %}
-                {{ (engineers_data | sum(attribute='daily_overtime') / engineers_data | length) | round(2) }}時間/日
-              {% else %}
-                0時間/日
-              {% endif %}
-            </div>
-          </div>
-          <div class="col-auto">
-            <i class="fas fa-clock fa-2x text-gray-300"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- アラート -->
-{% if understaffed_products or overloaded_engineers %}
 <div class="row mb-4">
-  <div class="col-12">
-    <div class="card border-0 shadow">
-      <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold">アラート</h6>
-      </div>
-      <div class="card-body">
-        {% if understaffed_products %}
-          <div class="alert-item alert-understaffed">
-            <h6 class="font-weight-bold">
-              <i class="fas fa-exclamation-triangle text-danger me-2"></i>以下の製品は担当エンジニアが不足しています
-            </h6>
-            <ul class="mb-0">
-              {% for product in understaffed_products %}
-                <li>{{ product.name }}: {{ product.engineer_count }}人 (最小必要人数: {{ product.minimum_required }}人)</li>
-              {% endfor %}
-            </ul>
-          </div>
-        {% endif %}
-        
-        {% if overloaded_engineers %}
-          <div class="alert-item alert-overloaded">
-            <h6 class="font-weight-bold">
-              <i class="fas fa-exclamation-triangle text-warning me-2"></i>以下のエンジニアは担当製品数が多すぎます
-            </h6>
-            <ul class="mb-0">
-              {% for engineer in overloaded_engineers %}
-                <li>{{ engineer.name }}: {{ engineer.product_count }}製品 (上限: {{ engineer.maximum_allowed }}製品)</li>
-              {% endfor %}
-            </ul>
-          </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</div>
-{% endif %}
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">概要</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-bg-primary">
+                            <div class="card-body">
+                                <h5>エンジニア総数</h5>
+                                <h2>{{ metrics.summary.engineer_count }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-bg-info">
+                            <div class="card-body">
+                                <h5>製品総数</h5>
+                                <h2>{{ metrics.summary.product_count }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-bg-success">
+                            <div class="card-body">
+                                <h5>年間問い合わせ数</h5>
+                                <h2>{{ metrics.summary.total_annual_inquiries }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card {% if metrics.summary.high_overtime_engineers > 0 %}text-bg-danger{% else %}text-bg-secondary{% endif %}">
+                            <div class="card-body">
+                                <h5>残業超過エンジニア数</h5>
+                                <h2>{{ metrics.summary.high_overtime_engineers }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-<!-- チャート -->
-<div class="row">
-  <div class="col-xl-6">
-    <div class="card border-0 shadow mb-4">
-      <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-        <h6 class="m-0 font-weight-bold">製品ごとの担当エンジニア数</h6>
-      </div>
-      <div class="card-body">
-        <div class="chart-container">
-          <canvas id="productEngineersChart" data-products="{{ products_data | tojson }}"></canvas>
+                <div class="row mt-3">
+                    <div class="col-md-4 mb-3">
+                        <div class="card text-bg-primary">
+                            <div class="card-body">
+                                <h5>平均担当製品数/エンジニア</h5>
+                                <h2>{{ metrics.summary.avg_products_per_engineer }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card text-bg-info">
+                            <div class="card-body">
+                                <h5>平均担当者数/製品</h5>
+                                <h2>{{ metrics.summary.avg_engineers_per_product }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card {% if metrics.summary.understaffed_products > 0 %}text-bg-warning{% else %}text-bg-success{% endif %}">
+                            <div class="card-body">
+                                <h5>担当者不足製品数</h5>
+                                <h2>{{ metrics.summary.understaffed_products }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
-  
-  <div class="col-xl-6">
-    <div class="card border-0 shadow mb-4">
-      <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-        <h6 class="m-0 font-weight-bold">製品ごとの充足率</h6>
-      </div>
-      <div class="card-body">
-        <div class="chart-container">
-          <canvas id="productSufficiencyChart" data-products="{{ products_data | tojson }}"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="row">
-  <div class="col-xl-6">
-    <div class="card border-0 shadow mb-4">
-      <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-        <h6 class="m-0 font-weight-bold">エンジニアごとの予測残業時間</h6>
-      </div>
-      <div class="card-body">
-        <div class="chart-container">
-          <canvas id="engineerOvertimeChart" data-engineers="{{ engineers_data | tojson }}"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="col-xl-6">
-    <div class="card border-0 shadow mb-4">
-      <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-        <h6 class="m-0 font-weight-bold">エンジニアごとの負荷率</h6>
-      </div>
-      <div class="card-body">
-        <div class="chart-container">
-          <canvas id="engineerWorkloadChart" data-engineers="{{ engineers_data | tojson }}"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
-<!-- オフィス写真 -->
-<div class="row">
-  <div class="col-12">
-    <div class="card border-0 shadow mb-4">
-      <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold">快適なワークプレイスで効率的なサポートを</h6>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-4 mb-4">
-            <img src="https://pixabay.com/get/gbcc4798c0417f95f91ad2d36096f88190f0489ab42f8e360a693185d3f4216b3a9461f4021e6b881a9245bc161ac6397f9743aabf51ae4b298d29b289eb80c49_1280.jpg" class="img-fluid rounded" alt="オフィスワークプレイス">
-          </div>
-          <div class="col-md-4 mb-4">
-            <img src="https://pixabay.com/get/gbe9bb13c95c1cad704302988bd5492af60b0d46965cf5b80b74939203cab4cb96344ac717558f4cc77f62ffc9940bc0246335db87bc9583c4475dc5db3fed9ae_1280.jpg" class="img-fluid rounded" alt="技術サポートチーム">
-          </div>
-          <div class="col-md-4 mb-4">
-            <img src="https://pixabay.com/get/gcec687f6a2640ec3197d822e19c34e57880153a01b54269aa38722498fc8d4b71ca4d31d8c6fe8b1fc535afd68ddec687fed96f597913cd0cfdf7dfe0525410d_1280.jpg" class="img-fluid rounded" alt="ダッシュボード分析">
-          </div>
+<div class="row mb-4">
+    <!-- Charts -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">エンジニア担当製品数分布</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="productCountChart" height="250"></canvas>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">製品耐性スコア分布</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="resilienceChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Engineer Table -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">エンジニア一覧</h5>
+                <small class="text-muted">担当製品数順</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="engineersTable" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>エンジニア名</th>
+                                <th>所属課</th>
+                                <th>担当製品数</th>
+                                <th>年間問い合わせ数</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for engineer in metrics.engineers %}
+                            <tr>
+                                <td>{{ engineer.id }}</td>
+                                <td>{{ engineer.name }}</td>
+                                <td>{{ engineer.department }}</td>
+                                <td>
+                                    <span class="badge {% if engineer.product_count > 5 %}bg-warning{% else %}bg-success{% endif %}">
+                                        {{ engineer.product_count }}製品
+                                    </span>
+                                </td>
+                                <td>{{ engineer.total_inquiries }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Table -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">製品一覧</h5>
+                <small class="text-muted">耐性スコアの低い順</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="productsTable" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>製品名</th>
+                                <th>ベンダー</th>
+                                <th>年間問い合わせ数</th>
+                                <th>担当エンジニア数</th>
+                                <th>耐性スコア</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in metrics.products %}
+                            <tr>
+                                <td>{{ product.id }}</td>
+                                <td>{{ product.name }}</td>
+                                <td>{{ product.vendor }}</td>
+                                <td>{{ product.annual_inquiries }}</td>
+                                <td>{{ product.engineer_count }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar 
+                                            {% if product.resilience_score < 40 %}bg-danger
+                                            {% elif product.resilience_score < 70 %}bg-warning
+                                            {% else %}bg-success{% endif %}" 
+                                            role="progressbar" 
+                                            style="width: {{ product.resilience_score }}%;" 
+                                            aria-valuenow="{{ product.resilience_score }}" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="100">
+                                            {{ product.resilience_score }}
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+    // Initialize DataTables
+    $(document).ready(function() {
+        $('#engineersTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/ja.json'
+            },
+            pageLength: 10,
+            order: [[3, 'desc']] // Sort by product count (descending)
+        });
+
+        $('#productsTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/ja.json'
+            },
+            pageLength: 10,
+            order: [[5, 'asc']] // Sort by resilience score (ascending)
+        });
+
+        // Extract data for charts
+        const engineers = {{ metrics.engineers|tojson }};
+        const products = {{ metrics.products|tojson }};
+
+        // エンジニア担当製品数分布グラフ
+        const productCountData = {
+            '1製品': 0,
+            '2製品': 0,
+            '3製品': 0,
+            '4製品': 0,
+            '5製品': 0,
+            '6製品以上': 0
+        };
+
+        engineers.forEach(engineer => {
+            const count = engineer.product_count;
+            if (count === 1) productCountData['1製品']++;
+            else if (count === 2) productCountData['2製品']++;
+            else if (count === 3) productCountData['3製品']++;
+            else if (count === 4) productCountData['4製品']++;
+            else if (count === 5) productCountData['5製品']++;
+            else productCountData['6製品以上']++;
+        });
+
+        const productCountCtx = document.getElementById('productCountChart').getContext('2d');
+        new Chart(productCountCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(productCountData),
+                datasets: [{
+                    label: 'エンジニア数',
+                    data: Object.values(productCountData),
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 159, 64, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgb(54, 162, 235)',
+                        'rgb(54, 162, 235)',
+                        'rgb(54, 162, 235)',
+                        'rgb(54, 162, 235)',
+                        'rgb(54, 162, 235)',
+                        'rgb(255, 159, 64)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.parsed.y}人 (${(context.parsed.y / engineers.length * 100).toFixed(1)}%)`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'エンジニア数'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '担当製品数'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Resilience Score Distribution Chart
+        const resilienceData = {
+            '0-20': 0,
+            '21-40': 0,
+            '41-60': 0,
+            '61-80': 0,
+            '81-100': 0
+        };
+
+        products.forEach(product => {
+            const score = product.resilience_score;
+            if (score <= 20) resilienceData['0-20']++;
+            else if (score <= 40) resilienceData['21-40']++;
+            else if (score <= 60) resilienceData['41-60']++;
+            else if (score <= 80) resilienceData['61-80']++;
+            else resilienceData['81-100']++;
+        });
+
+        const resilienceCtx = document.getElementById('resilienceChart').getContext('2d');
+        new Chart(resilienceCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(resilienceData),
+                datasets: [{
+                    label: '製品数',
+                    data: Object.values(resilienceData),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(255, 159, 64, 0.6)',
+                        'rgba(255, 205, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(54, 162, 235, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgb(255, 99, 132)',
+                        'rgb(255, 159, 64)',
+                        'rgb(255, 205, 86)',
+                        'rgb(75, 192, 192)',
+                        'rgb(54, 162, 235)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.parsed.y}製品 (${(context.parsed.y / products.length * 100).toFixed(1)}%)`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '製品数'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '耐性スコア'
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

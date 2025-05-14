@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}パラメータ設定{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">システムパラメータ設定</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">システム全体で使用される基準値を設定します。これらの値はダッシュボードの計算やシミュレーションのデフォルト値として使用されます。</p>
+                
+                <form action="{{ url_for('update_parameters') }}" method="post">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">リソース設定</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% for param in params %}
+                                    {% if param.key in ['min_engineers_per_product', 'max_products_per_engineer'] %}
+                                    <div class="mb-3">
+                                        <label for="{{ param.key }}" class="form-label">{{ param.description }}</label>
+                                        <input type="number" class="form-control" id="{{ param.key }}" name="param_{{ param.key }}" value="{{ param.value }}" min="1" step="1" required>
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">稼働設定</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% for param in params %}
+                                    {% if param.key in ['hours_per_inquiry', 'inquiry_work_ratio', 'total_annual_inquiries', 'annual_working_days', 'daily_working_hours'] %}
+                                    <div class="mb-3">
+                                        <label for="{{ param.key }}" class="form-label">{{ param.description }}</label>
+                                        {% if param.key == 'inquiry_work_ratio' %}
+                                        <input type="number" class="form-control" id="{{ param.key }}" name="param_{{ param.key }}" value="{{ param.value }}" min="0.1" max="1" step="0.01" required>
+                                        <div class="form-text">0.6は「稼働時間の60%が問い合わせ対応に使われる」ことを意味します</div>
+                                        {% elif param.key in ['hours_per_inquiry', 'daily_working_hours'] %}
+                                        <input type="number" class="form-control" id="{{ param.key }}" name="param_{{ param.key }}" value="{{ param.value }}" min="0.1" step="0.1" required>
+                                        {% else %}
+                                        <input type="number" class="form-control" id="{{ param.key }}" name="param_{{ param.key }}" value="{{ param.value }}" min="1" step="1" required>
+                                        {% endif %}
+                                        
+                                        {% if param.key == 'annual_working_days' %}
+                                        <div class="form-text">365日 - 120日(土日祝) - 20日(有給休暇) = 225日</div>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <button type="reset" class="btn btn-secondary">リセット</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/parameters.js') }}"></script>
+<script>
+    $(document).ready(function() {
+        // 現在のパラメータ値を保存
+        const originalValues = {};
+        $('input[name^="param_"]').each(function() {
+            originalValues[$(this).attr('name')] = $(this).val();
+        });
+        
+        // リセットボタンのカスタム動作
+        $('button[type="reset"]').click(function(e) {
+            e.preventDefault();
+            
+            // 元の値に戻す
+            for (const name in originalValues) {
+                $(`input[name="${name}"]`).val(originalValues[name]);
+            }
+        });
+    });
+</script>
+{% endblock %}

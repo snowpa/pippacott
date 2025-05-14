@@ -1,175 +1,190 @@
-{% extends "layout.html" %}
+{% extends 'base.html' %}
+
+{% block title %}製品管理{% endblock %}
 
 {% block content %}
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-  <h1 class="h3 mb-0">製品管理</h1>
-  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
-    <i class="fas fa-plus fa-sm"></i> 新規製品追加
-  </button>
-</div>
-
-<!-- 製品一覧 -->
-<div class="card border-0 shadow mb-4">
-  <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-    <h6 class="m-0 font-weight-bold">製品一覧</h6>
-    <!-- ベンダーフィルター -->
-    <div class="form-group mb-0">
-      <select class="form-select form-select-sm" id="vendorFilter">
-        <option value="all" selected>全てのベンダー</option>
-      </select>
-    </div>
-  </div>
-  <div class="card-body">
-    <div class="table-responsive">
-      <table class="table table-bordered datatable" id="productsTable" width="100%" cellspacing="0">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>製品名</th>
-            <th>ベンダー名</th>
-            <th>年間問い合わせ数</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for product in products %}
-          <tr>
-            <td>{{ product.id }}</td>
-            <td>{{ product.name }}</td>
-            <td>{{ product.vendor }}</td>
-            <td>{{ product.annual_inquiries }}</td>
-            <td class="action-buttons">
-              <button class="btn btn-sm btn-info"
-                      data-bs-toggle="modal" 
-                      data-bs-target="#editProductModal"
-                      data-id="{{ product.id }}"
-                      data-name="{{ product.name }}"
-                      data-vendor="{{ product.vendor }}"
-                      data-inquiries="{{ product.annual_inquiries }}">
-                <i class="fas fa-edit"></i>
-              </button>
-              <form class="d-inline" action="{{ url_for('delete_product', id=product.id) }}" method="POST"
-                    onsubmit="return confirmDelete(event, '製品「{{ product.name }}」を削除してもよろしいですか？')">
-                <button type="submit" class="btn btn-sm btn-danger">
-                  <i class="fas fa-trash"></i>
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">製品一覧</h5>
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                    <i class="fas fa-plus me-2"></i>新規製品追加
                 </button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- 製品の画像セクション -->
-<div class="row">
-  <div class="col-12">
-    <div class="card border-0 shadow mb-4">
-      <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold">製品サポートチーム</h6>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-4 mb-4">
-            <img src="https://pixabay.com/get/g75122bfbd6ec233ccfb1157b10ae5da7f70144257fb94fa4bf13212bed2f6221d236b0b86bef2ebdc366edc59267748c3f2ee9bb172d2db4142c25110a3f4ee8_1280.jpg" class="img-fluid rounded" alt="オフィスワークプレイス">
-          </div>
-          <div class="col-md-4 mb-4">
-            <img src="https://pixabay.com/get/g738d48ac103af4c7a05158448f75991acb68c302cd286efffa4f9d2832cd1b65b36fb774a82b09161d6bd87c281766dad071da8fdfec8102cc9bb787726c3aa4_1280.jpg" class="img-fluid rounded" alt="テクノロジーサポートチーム">
-          </div>
-          <div class="col-md-4 mb-4">
-            <img src="https://pixabay.com/get/gd48c3424c21dcf529bacc66b5a68a65b74674398da664e6bd070167d1df2f0b1e44ad74ced4e148237c97315103ddf0c7cac2e2c551a7b877ac77bc1b3dbf95b_1280.jpg" class="img-fluid rounded" alt="ダッシュボード分析">
-          </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="productsTable" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>製品名</th>
+                                <th>ベンダー名</th>
+                                <th>年間問い合わせ数</th>
+                                <th>担当エンジニア数</th>
+                                <th>作成日</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr>
+                                <td>{{ product.id }}</td>
+                                <td>{{ product.name }}</td>
+                                <td>{{ product.vendor }}</td>
+                                <td>{{ product.annual_inquiries }}</td>
+                                <td>{{ product.assignments|length }}</td>
+                                <td>{{ product.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary edit-product-btn" 
+                                            data-id="{{ product.id }}"
+                                            data-name="{{ product.name }}"
+                                            data-vendor="{{ product.vendor }}"
+                                            data-annual-inquiries="{{ product.annual_inquiries }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger delete-product-btn" 
+                                            data-id="{{ product.id }}"
+                                            data-name="{{ product.name }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 
-<!-- 新規製品追加モーダル -->
+<!-- Add Product Modal -->
 <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addProductModalLabel">新規製品追加</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="addProductForm" action="{{ url_for('add_product') }}" method="POST" class="needs-validation" novalidate>
-          {{ form.csrf_token }}
-          <div class="mb-3">
-            <label for="name" class="form-label">製品名</label>
-            <input type="text" class="form-control" id="name" name="name" required>
-            <div class="invalid-feedback">
-              製品名を入力してください。
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addProductModalLabel">新規製品追加</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-          </div>
-          <div class="mb-3">
-            <label for="vendor" class="form-label">ベンダー名</label>
-            <input type="text" class="form-control" id="vendor" name="vendor" required>
-            <div class="invalid-feedback">
-              ベンダー名を入力してください。
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="annual_inquiries" class="form-label">年間問い合わせ数</label>
-            <input type="number" class="form-control inquiries-input" id="annual_inquiries" name="annual_inquiries" min="0" value="0" required>
-            <div class="invalid-feedback">
-              0以上の値を入力してください。
-            </div>
-          </div>
-          <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary">保存</button>
-          </div>
-        </form>
-      </div>
+            <form action="{{ url_for('add_product') }}" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">製品名</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="vendor" class="form-label">ベンダー名</label>
+                        <input type="text" class="form-control" id="vendor" name="vendor" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="annual_inquiries" class="form-label">年間問い合わせ数</label>
+                        <input type="number" class="form-control" id="annual_inquiries" name="annual_inquiries" min="0" value="0" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="submit" class="btn btn-primary">追加</button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
 </div>
 
-<!-- 製品編集モーダル -->
+<!-- Edit Product Modal -->
 <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="editProductModalLabel">製品編集</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="editProductForm" action="" method="POST" class="needs-validation" novalidate>
-          {{ form.csrf_token }}
-          <div class="mb-3">
-            <label for="editProductName" class="form-label">製品名</label>
-            <input type="text" class="form-control" id="editProductName" name="name" required>
-            <div class="invalid-feedback">
-              製品名を入力してください。
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProductModalLabel">製品情報編集</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-          </div>
-          <div class="mb-3">
-            <label for="editProductVendor" class="form-label">ベンダー名</label>
-            <input type="text" class="form-control" id="editProductVendor" name="vendor" required>
-            <div class="invalid-feedback">
-              ベンダー名を入力してください。
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="editProductInquiries" class="form-label">年間問い合わせ数</label>
-            <input type="number" class="form-control inquiries-input" id="editProductInquiries" name="annual_inquiries" min="0" required>
-            <div class="invalid-feedback">
-              0以上の値を入力してください。
-            </div>
-          </div>
-          <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary">更新</button>
-          </div>
-        </form>
-      </div>
+            <form id="editProductForm" action="" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_name" class="form-label">製品名</label>
+                        <input type="text" class="form-control" id="edit_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_vendor" class="form-label">ベンダー名</label>
+                        <input type="text" class="form-control" id="edit_vendor" name="vendor" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_annual_inquiries" class="form-label">年間問い合わせ数</label>
+                        <input type="number" class="form-control" id="edit_annual_inquiries" name="annual_inquiries" min="0" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
+</div>
+
+<!-- Delete Product Modal -->
+<div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteProductModalLabel">製品削除確認</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>以下の製品を削除してもよろしいですか？</p>
+                <p id="delete_product_name" class="fw-bold text-danger"></p>
+                <p class="text-danger">注意: この操作は元に戻せません。この製品の全ての担当割り当ても削除されます。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                <form id="deleteProductForm" action="" method="post">
+                    <button type="submit" class="btn btn-danger">削除</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/products.js') }}"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#productsTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/ja.json'
+            },
+            order: [[0, 'asc']], // Sort by ID by default
+            pageLength: 10
+        });
+        
+        // Edit Product
+        $('.edit-product-btn').click(function() {
+            const id = $(this).data('id');
+            const name = $(this).data('name');
+            const vendor = $(this).data('vendor');
+            const annualInquiries = $(this).data('annual-inquiries');
+            
+            $('#edit_name').val(name);
+            $('#edit_vendor').val(vendor);
+            $('#edit_annual_inquiries').val(annualInquiries);
+            $('#editProductForm').attr('action', `/products/edit/${id}`);
+            
+            $('#editProductModal').modal('show');
+        });
+        
+        // Delete Product
+        $('.delete-product-btn').click(function() {
+            const id = $(this).data('id');
+            const name = $(this).data('name');
+            
+            $('#delete_product_name').text(name);
+            $('#deleteProductForm').attr('action', `/products/delete/${id}`);
+            
+            $('#deleteProductModal').modal('show');
+        });
+    });
+</script>
 {% endblock %}
