@@ -332,8 +332,13 @@ def calculate_simulation_results(data):
     # Calculate average inquiries per engineer
     avg_inquiries_per_engineer = total_annual_inquiries / total_engineers
     
-    # Calculate optimal engineer count based on zero overtime
-    optimal_engineer_count = math.ceil(total_hours_needed / (annual_working_days * daily_working_hours))
+    # Calculate optimal engineer count based on target monthly overtime
+    target_monthly_overtime = float(Parameter.query.filter_by(key="target_monthly_overtime").first().value)
+    annual_overtime_hours = target_monthly_overtime * 12
+    optimal_engineer_count = math.ceil(
+        total_hours_needed / 
+        ((annual_working_days * daily_working_hours) + annual_overtime_hours)
+    )
     
     # Calculate optimal product count based on engineer capacity
     # This is the maximum number of products that can be fully staffed
