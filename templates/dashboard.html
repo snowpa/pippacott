@@ -149,7 +149,6 @@
                                 <th>ベンダー</th>
                                 <th>年間問い合わせ数</th>
                                 <th>担当エンジニア数</th>
-                                <th>リスク耐性スコア（製品）</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -160,11 +159,6 @@
                                 <td>{{ product.vendor }}</td>
                                 <td>{{ product.annual_inquiries }}</td>
                                 <td>{{ product.engineer_count }}</td>
-                                <td>
-                                    <span class="badge {% if product.resilience_score < 0 %}bg-danger{% elif product.resilience_score == 0 %}bg-warning{% else %}bg-success{% endif %}">
-                                        {% if product.resilience_score > 0 %}+{% endif %}{{ product.resilience_score }}人
-                                    </span>
-                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
