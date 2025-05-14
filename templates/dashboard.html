@@ -67,6 +67,10 @@
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">担当製品数（エンジニア）分布</h5>
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i>
+                    各エンジニアが担当している製品の数を集計し、担当製品数ごとのエンジニア人数を表示します。
+                </small>
             </div>
             <div class="card-body">
                 <canvas id="productCountChart" height="250"></canvas>
@@ -76,11 +80,10 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">リスク耐性スコア（製品）分布</h5>
+                <h5 class="card-title mb-0">担当者数（製品）分布</h5>
                 <small class="text-muted">
                     <i class="fas fa-info-circle"></i>
-                    リスク耐性スコア（製品）は、基準となる最小人数からの差分を表します。
-                    正の値は基準より多く、負の値は基準より少ないことを示します。
+                    各製品の担当エンジニア数の分布を表示します。
                 </small>
             </div>
             <div class="card-body">
@@ -345,7 +348,7 @@
                     x: {
                         title: {
                             display: true,
-                            text: '耐性スコア'
+                            text: '担当エンジニア数'
                         }
                     }
                 }
