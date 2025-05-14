@@ -29,7 +29,7 @@
                                         <input type="number" class="form-control" id="total_products" name="total_products" min="1" value="50" required>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="total_annual_inquiries" class="form-label">年間問い合わせ件数</label>
+                                        <label for="total_annual_inquiries" class="form-label">年間SR件数</label>
                                         <input type="number" class="form-control" id="total_annual_inquiries" name="total_annual_inquiries" min="0" value="5000" required>
                                     </div>
                                 </div>
@@ -43,13 +43,13 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="mb-3">
-                                        <label for="hours_per_inquiry" class="form-label">問い合わせあたりの対応時間（時間）</label>
+                                        <label for="hours_per_inquiry" class="form-label">SRあたりの対応時間（時間）</label>
                                         <input type="number" class="form-control" id="hours_per_inquiry" name="hours_per_inquiry" min="0.1" step="0.1" value="2" required>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="inquiry_work_ratio" class="form-label">総稼働に対する問い合わせ対応割合</label>
+                                        <label for="inquiry_work_ratio" class="form-label">総稼働に対するSR対応割合</label>
                                         <input type="number" class="form-control" id="inquiry_work_ratio" name="inquiry_work_ratio" min="0.1" max="1" step="0.01" value="0.6" required>
-                                        <div class="form-text">0.6は「稼働時間の60%が問い合わせ対応に使われる」ことを意味します</div>
+                                        <div class="form-text">0.6は「稼働時間の60%がSR対応に使われる」ことを意味します</div>
                                     </div>
                                     <div class="mb-3">
                                         <label for="annual_working_days" class="form-label">年間稼働日数</label>
@@ -129,7 +129,7 @@
                                     
                                     <div class="mb-3">
                                         <div class="d-flex justify-content-between">
-                                            <span>エンジニア1人あたりの年間対応問い合わせ数:</span>
+                                            <span>エンジニア1人あたりの年間対応SR数:</span>
                                             <span id="avgInquiriesPerEngineer" class="fw-bold"></span>
                                         </div>
                                     </div>
@@ -191,8 +191,8 @@
                                     </div>
                                     
                                     <div class="alert alert-info mt-3">
-                                        <h6 class="alert-heading fw-bold">注意事項: 問い合わせ対応割合の影響</h6>
-                                        <p class="mb-0">エンジニアの稼働時間のうち、「総稼働に対する問い合わせ対応割合」で指定された割合だけが問い合わせ対応に使われると想定しています。残りの時間は他の業務（開発や研修など）に使用されます。この割合を下げると、同じ問い合わせ数に対して必要なエンジニア数が増加します。</p>
+                                        <h6 class="alert-heading fw-bold">注意事項: SR対応割合の影響</h6>
+                                        <p class="mb-0">エンジニアの稼働時間のうち、「総稼働に対すSR対応割合」で指定された割合だけがSR対応に使われると想定しています。残りの時間は他の業務（開発や研修など）に使用されます。この割合を下げると、同じSR数に対して必要なエンジニア数が増加します。</p>
                                     </div>
                                 </div>
                             </div>
@@ -210,8 +210,8 @@
                                     <div class="mt-3">
                                         <h6 class="fw-bold">計算の内訳:</h6>
                                         <ul>
-                                            <li><strong>年間必要工数</strong> = 年間問い合わせ件数 × 問い合わせあたりの対応時間</li>
-                                            <li><strong>総必要工数</strong> = 年間必要工数 ÷ 問い合わせ対応割合 <small class="text-muted">（問い合わせ対応以外の業務時間を含む）</small></li>
+                                            <li><strong>年間必要工数</strong> = 年間SR件数 × SRあたりの対応時間</li>
+                                            <li><strong>総必要工数</strong> = 年間必要工数 ÷SR対応割合 <small class="text-muted">（SR対応以外の業務時間を含む）</small></li>
                                             <li><strong>最適エンジニア数</strong> = 総必要工数 ÷ (年間稼働日数 × 日勤務時間)</li>
                                             <li><strong>最適製品数</strong> = (エンジニア数 × 担当製品数上限) ÷ 製品あたり最小担当人数</li>
                                         </ul>
@@ -330,12 +330,12 @@
                 recommendation += '<p>🟢 <strong>良好:</strong> 残業時間は許容範囲内です。</p>';
             }
             
-            // 問い合わせ対応割合に基づく推奨事項を追加
+            // SR対応割合に基づく推奨事項を追加
             const workRatioValue = parseFloat(inputs.inquiry_work_ratio);
             if (workRatioValue < 0.5) {
-                recommendation += `<p>📊 <strong>注意:</strong> 問い合わせ対応割合が${Math.round(workRatioValue * 100)}%と低めです。稼働時間の${Math.round((1-workRatioValue) * 100)}%が他業務に使われる想定ですが、これが実態に即しているか確認してください。この設定では多くのエンジニアリソースが必要になります。</p>`;
+                recommendation += `<p>📊 <strong>注意:</strong> SR対応割合が${Math.round(workRatioValue * 100)}%と低めです。稼働時間の${Math.round((1-workRatioValue) * 100)}%が他業務に使われる想定ですが、これが実態に即しているか確認してください。この設定では多くのエンジニアリソースが必要になります。</p>`;
             } else if (workRatioValue > 0.8) {
-                recommendation += `<p>📊 <strong>注意:</strong> 問い合わせ対応割合が${Math.round(workRatioValue * 100)}%と高めです。エンジニアの大半の時間が問い合わせ対応に使われる想定ですが、開発やトレーニングなど他の業務の時間が十分確保できるか確認してください。</p>`;
+                recommendation += `<p>📊 <strong>注意:</strong> SR対応割合が${Math.round(workRatioValue * 100)}%と高めです。エンジニアの大半の時間がSR対応に使われる想定ですが、開発やトレーニングなど他の業務の時間が十分確保できるか確認してください。</p>`;
             }
             
             if (results.understaffed_products > 0) {
@@ -370,9 +370,9 @@
                 analysis += ' すべての製品が最小担当人数を満たしています。';
             }
             
-            // 問い合わせ対応割合の影響を説明
+            // SR対応割合の影響を説明
             const workRatio = parseFloat(inputs.inquiry_work_ratio);
-            analysis += ` なお、問い合わせ対応割合は${Math.round(workRatio * 100)}%に設定されており、エンジニアの稼働時間のうち${Math.round(workRatio * 100)}%のみが問い合わせ対応に使われると想定しています。`;
+            analysis += ` なお、SR対応割合は${Math.round(workRatio * 100)}%に設定されており、エンジニアの稼働時間のうち${Math.round(workRatio * 100)}%のみがSR対応に使われると想定しています。`;
             
             if (results.hours_surplus_deficit < 0) {
                 analysis += ` 年間では約${Math.abs(results.hours_surplus_deficit)}時間の稼働時間が不足しています。これは${Math.abs(results.engineer_surplus_deficit)}人分のリソースに相当します。`;

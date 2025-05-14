@@ -12,7 +12,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-3 mb-3">
-                        <div class="card text-bg-primary">
+                        <div class="card text-bg-primary compact-card">
                             <div class="card-body">
                                 <h5>エンジニア総数</h5>
                                 <h2>{{ metrics.summary.engineer_count }}</h2>
@@ -20,7 +20,7 @@
                         </div>
                     </div>
                     <div class="col-md-3 mb-3">
-                        <div class="card text-bg-info">
+                        <div class="card text-bg-info compact-card">
                             <div class="card-body">
                                 <h5>製品総数</h5>
                                 <h2>{{ metrics.summary.product_count }}</h2>
@@ -32,7 +32,7 @@
 
                 <div class="row mt-3">
                     <div class="col-md-4 mb-3">
-                        <div class="card text-bg-primary">
+                        <div class="card text-bg-primary compact-card">
                             <div class="card-body">
                                 <h5>平均担当製品数/エンジニア</h5>
                                 <h2>{{ metrics.summary.avg_products_per_engineer }}</h2>
@@ -40,7 +40,7 @@
                         </div>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <div class="card text-bg-info">
+                        <div class="card text-bg-info compact-card">
                             <div class="card-body">
                                 <h5>平均担当者数/製品</h5>
                                 <h2>{{ metrics.summary.avg_engineers_per_product }}</h2>
@@ -48,7 +48,7 @@
                         </div>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <div class="card {% if metrics.summary.understaffed_products > 0 %}text-bg-warning{% else %}text-bg-success{% endif %}">
+                        <div class="card {% if metrics.summary.understaffed_products > 0 %}text-bg-warning{% else %}text-bg-success{% endif %} compact-card">
                             <div class="card-body">
                                 <h5>担当者不足製品数</h5>
                                 <h2>{{ metrics.summary.understaffed_products }}</h2>
@@ -66,10 +66,10 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">担当製品数（エンジニア）分布</h5>
+                <h6 class="card-title mb-0">担当製品数（エンジニア）分布</h6>
                 <small class="text-muted">
                     <i class="fas fa-info-circle"></i>
-                    各エンジニアが担当している製品の数を集計し、担当製品数ごとのエンジニア人数を表示します。
+                    担当製品数ごとのエンジニア人数を表示します。
                 </small>
             </div>
             <div class="card-body">
@@ -80,7 +80,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">担当者数（製品）分布</h5>
+                <h6 class="card-title mb-0">担当者数（製品）分布</h6>
                 <small class="text-muted">
                     <i class="fas fa-info-circle"></i>
                     各製品の担当エンジニア数の分布を表示します。
@@ -147,7 +147,7 @@
                                 <th>ID</th>
                                 <th>製品名</th>
                                 <th>ベンダー</th>
-                                <th>年間問い合わせ数</th>
+                                <th>年間SR数</th>
                                 <th>担当エンジニア数</th>
                             </tr>
                         </thead>
