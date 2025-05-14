@@ -1,0 +1,240 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+  <h1 class="h3 mb-0">基本設定</h1>
+</div>
+
+<!-- 設定タブ -->
+<div class="card border-0 shadow mb-4">
+  <div class="card-header py-3">
+    <ul class="nav nav-pills" id="settingsTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link {% if active_tab == 'settings' %}active{% endif %}" id="general-tab" data-bs-toggle="pill" href="#general" role="tab" aria-controls="general" aria-selected="true">
+          <i class="fas fa-sliders-h me-1"></i> 基本パラメータ
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link {% if active_tab == 'departments' %}active{% endif %}" id="departments-tab" data-bs-toggle="pill" href="#departments" role="tab" aria-controls="departments" aria-selected="false">
+          <i class="fas fa-building me-1"></i> 部署管理
+        </a>
+      </li>
+    </ul>
+  </div>
+  <div class="card-body">
+    <div class="tab-content" id="settingsTabContent">
+      <!-- 基本パラメータ設定 -->
+      <div class="tab-pane fade {% if active_tab == 'settings' %}show active{% endif %}" id="general" role="tabpanel" aria-labelledby="general-tab">
+        <form id="settingsForm" action="{{ url_for('update_settings') }}" method="POST" class="needs-validation" novalidate>
+          {{ form.csrf_token }}
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="min_engineers_per_product" class="form-label">製品担当エンジニアの最小人数</label>
+                <input type="number" class="form-control" id="min_engineers_per_product" name="min_engineers_per_product" value="{{ settings.min_engineers_per_product }}" min="1" required>
+                <div class="form-text">各製品に割り当てるべきエンジニアの最小人数を指定します。</div>
+                <div class="invalid-feedback">
+                  1以上の値を入力してください。
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="max_products_per_engineer" class="form-label">エンジニアの担当製品数最大数</label>
+                <input type="number" class="form-control" id="max_products_per_engineer" name="max_products_per_engineer" value="{{ settings.max_products_per_engineer }}" min="1" required>
+                <div class="form-text">エンジニア1人あたりの担当製品数の上限を指定します。</div>
+                <div class="invalid-feedback">
+                  1以上の値を入力してください。
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="hours_per_inquiry" class="form-label">問い合わせあたりの対応時間（時間）</label>
+                <input type="number" class="form-control" id="hours_per_inquiry" name="hours_per_inquiry" value="{{ settings.hours_per_inquiry }}" min="0.1" step="0.1" required>
+                <div class="form-text">問い合わせ1件あたりの平均対応時間を時間単位で指定します。</div>
+                <div class="invalid-feedback">
+                  0.1以上の値を入力してください。
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="inquiry_work_ratio" class="form-label">総稼働に対する問い合わせ対応割合</label>
+                <input type="number" class="form-control" id="inquiry_work_ratio" name="inquiry_work_ratio" value="{{ settings.inquiry_work_ratio }}" min="0.01" max="1.0" step="0.01" required>
+                <div class="form-text">エンジニアの総稼働時間のうち、問い合わせ対応に充てる割合を指定します (0.01～1.0)。</div>
+                <div class="invalid-feedback">
+                  0.01から1.0の間で入力してください。
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="work_hours_per_day" class="form-label">1日あたりの稼働時間</label>
+                <input type="number" class="form-control" id="work_hours_per_day" name="work_hours_per_day" value="{{ settings.work_hours_per_day }}" min="0.1" step="0.1" required>
+                <div class="form-text">エンジニア1人あたりの1日の稼働時間を指定します。</div>
+                <div class="invalid-feedback">
+                  0.1以上の値を入力してください。
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="work_days_per_year" class="form-label">年間稼働日数</label>
+                <input type="number" class="form-control" id="work_days_per_year" name="work_days_per_year" value="{{ settings.work_days_per_year }}" min="1" required>
+                <div class="form-text">エンジニア1人あたりの年間稼働日数を指定します。</div>
+                <div class="invalid-feedback">
+                  1以上の値を入力してください。
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save me-1"></i> 設定を保存
+            </button>
+          </div>
+        </form>
+      </div>
+      
+      <!-- 部署管理 -->
+      <div class="tab-pane fade {% if active_tab == 'departments' %}show active{% endif %}" id="departments" role="tabpanel" aria-labelledby="departments-tab">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="card border-0 bg-dark">
+              <div class="card-header">
+                <h6 class="m-0">部署追加</h6>
+              </div>
+              <div class="card-body">
+                <form id="departmentForm" action="{{ url_for('add_department') }}" method="POST" class="needs-validation" novalidate>
+                  {{ department_form.csrf_token }}
+                  <div class="mb-3">
+                    <label for="name" class="form-label">部署名</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                    <div class="invalid-feedback">
+                      部署名を入力してください。
+                    </div>
+                  </div>
+                  <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">
+                      <i class="fas fa-plus me-1"></i> 部署を追加
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="alert alert-info">
+              <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>部署管理について</h6>
+              <p class="mb-0">部署はエンジニアを組織的に管理するために使用します。エンジニアは必ずいずれかの部署に所属する必要があります。</p>
+              <hr>
+              <p class="mb-0">
+                <i class="fas fa-exclamation-triangle me-1"></i> エンジニアが所属している部署は削除できません。
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="table-responsive">
+          <table class="table table-bordered" id="departmentsTable" width="100%" cellspacing="0">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>部署名</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for department in departments %}
+              <tr>
+                <td>{{ department.id }}</td>
+                <td>{{ department.name }}</td>
+                <td class="action-buttons">
+                  <button class="btn btn-sm btn-info"
+                          data-bs-toggle="modal" 
+                          data-bs-target="#editDepartmentModal"
+                          data-id="{{ department.id }}"
+                          data-name="{{ department.name }}">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <form class="d-inline" action="{{ url_for('delete_department', id=department.id) }}" method="POST"
+                        onsubmit="return confirmDelete(event, '部署「{{ department.name }}」を削除してもよろしいですか？')">
+                    <button type="submit" class="btn btn-sm btn-danger">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- サポートイメージ -->
+<div class="row">
+  <div class="col-12">
+    <div class="card border-0 shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold">サポートチーム</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4 mb-4">
+            <img src="https://pixabay.com/get/g738d48ac103af4c7a05158448f75991acb68c302cd286efffa4f9d2832cd1b65b36fb774a82b09161d6bd87c281766dad071da8fdfec8102cc9bb787726c3aa4_1280.jpg" class="img-fluid rounded" alt="テクノロジーサポートチーム">
+          </div>
+          <div class="col-md-4 mb-4">
+            <img src="https://pixabay.com/get/g492231ac2941918c018ecdea60b1f51f7228d60c9bef41c1c6fd125fee814af07efcf7294770207865693a3e5dbc554ca817dea0875af1f7931c239f9d5b725f_1280.jpg" class="img-fluid rounded" alt="オフィスワークプレイス">
+          </div>
+          <div class="col-md-4 mb-4">
+            <img src="https://pixabay.com/get/geceefc4d0700bd09b0ada75d15dbfcfed183ba1560fed114e315a4249fff6fcc82b9bcb5e5ff7f3b994ceaeb346a88d88821092c2b858da7b52b752c6ac70933_1280.png" class="img-fluid rounded" alt="技術サポートチーム">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 部署編集モーダル -->
+<div class="modal fade" id="editDepartmentModal" tabindex="-1" aria-labelledby="editDepartmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editDepartmentModalLabel">部署編集</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editDepartmentForm" action="" method="POST" class="needs-validation" novalidate>
+          {{ department_form.csrf_token }}
+          <div class="mb-3">
+            <label for="editDepartmentName" class="form-label">部署名</label>
+            <input type="text" class="form-control" id="editDepartmentName" name="name" required>
+            <div class="invalid-feedback">
+              部署名を入力してください。
+            </div>
+          </div>
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">更新</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,231 @@
+/* カスタムスタイル */
+
+/* サイドバー関連 */
+.sidebar {
+  min-height: 100vh;
+  width: 260px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  transition: all 0.3s;
+}
+
+.sidebar.toggled {
+  width: 0;
+  overflow: hidden;
+}
+
+.sidebar-brand {
+  height: 4.375rem;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-brand-icon {
+  height: 2rem;
+  width: 2rem;
+}
+
+.sidebar-brand-text {
+  margin-left: 0.5rem;
+  font-weight: 700;
+}
+
+.sidebar-divider {
+  margin: 0 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.sidebar .nav-item {
+  position: relative;
+}
+
+.sidebar .nav-link {
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar .nav-link i {
+  margin-right: 0.5rem;
+  width: 1.25rem;
+  text-align: center;
+}
+
+.sidebar .active {
+  font-weight: 700;
+}
+
+/* メインコンテンツ */
+.content-wrapper {
+  min-width: 0;
+  width: 100%;
+  margin-left: 260px;
+  transition: margin-left 0.3s;
+}
+
+.sidebar.toggled ~ .content-wrapper {
+  margin-left: 0;
+}
+
+.content-header {
+  padding: 1.5rem;
+}
+
+.content {
+  padding: 1.5rem;
+}
+
+/* カード */
+.card-dashboard {
+  margin-bottom: 1.5rem;
+  height: 100%;
+}
+
+.kpi-card {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.kpi-card .card-body {
+  padding: 1.25rem;
+}
+
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-label {
+  font-size: 0.875rem;
+  color: var(--bs-gray-600);
+}
+
+/* チャート */
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  margin-bottom: 1.5rem;
+}
+
+.chart-container-sm {
+  height: 200px;
+}
+
+.chart-container-lg {
+  height: 400px;
+}
+
+/* テーブル */
+.datatable-wrapper {
+  margin-bottom: 1.5rem;
+}
+
+.action-buttons {
+  white-space: nowrap;
+}
+
+.action-buttons .btn {
+  padding: 0.25rem 0.5rem;
+  margin-right: 0.25rem;
+}
+
+/* フォーム */
+.form-label {
+  font-weight: 500;
+}
+
+.form-floating > label {
+  font-weight: normal;
+}
+
+/* アラート */
+.alert-item {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+}
+
+.alert-understaffed {
+  background-color: rgba(255, 99, 132, 0.1);
+  border-left: 3px solid rgba(255, 99, 132, 1);
+}
+
+.alert-overloaded {
+  background-color: rgba(255, 159, 64, 0.1);
+  border-left: 3px solid rgba(255, 159, 64, 1);
+}
+
+/* モーダル */
+.modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* 製品選択モーダル */
+.product-checkbox-wrapper {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  margin-bottom: 0.25rem;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.product-checkbox-wrapper:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.product-checkbox-wrapper .form-check-input {
+  margin-right: 0.5rem;
+}
+
+/* シミュレーション */
+.simulation-param {
+  margin-bottom: 1rem;
+}
+
+.param-slider {
+  margin-top: 0.5rem;
+}
+
+.slider-value {
+  font-weight: 700;
+  text-align: center;
+  min-width: 3rem;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 0;
+    overflow: hidden;
+  }
+  
+  .content-wrapper {
+    margin-left: 0;
+  }
+  
+  .sidebar-toggled {
+    width: 260px;
+  }
+  
+  .topbar-toggled {
+    margin-left: 260px;
+  }
+}
+
+/* ダークモード対応 */
+[data-bs-theme=dark] .product-checkbox-wrapper:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-bs-theme=dark] .alert-understaffed {
+  background-color: rgba(255, 99, 132, 0.05);
+}
+
+[data-bs-theme=dark] .alert-overloaded {
+  background-color: rgba(255, 159, 64, 0.05);
+}
