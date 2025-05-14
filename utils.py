@@ -279,8 +279,12 @@ def calculate_simulation_results(data):
     max_products_per_engineer = int(data.get('max_products_per_engineer', 5))
     min_engineers_per_product = int(data.get('min_engineers_per_product', 2))
     
-    # Calculate total available work hours per year
-    total_available_hours = total_engineers * annual_working_days * daily_working_hours
+    # Get target monthly overtime
+    target_monthly_overtime = float(Parameter.query.filter_by(key="target_monthly_overtime").first().value)
+    annual_overtime_hours = target_monthly_overtime * 12
+    
+    # Calculate total available work hours per year (including target overtime)
+    total_available_hours = total_engineers * (annual_working_days * daily_working_hours + annual_overtime_hours)
     
     # Calculate total hours needed for inquiries
     total_inquiry_hours = total_annual_inquiries * hours_per_inquiry
