@@ -296,10 +296,17 @@ def calculate_simulation_results(data):
     hours_surplus = total_available_hours - total_hours_needed
     
     # Calculate average overtime per engineer per month
-    if hours_surplus < 0:
-        monthly_overtime_per_engineer = abs(hours_surplus) / (total_engineers * 12) if hours_surplus < 0 else 0
-    else:
-        monthly_overtime_per_engineer = 0
+    # 1人あたりの基本労働時間（年間）
+    base_hours_per_engineer = annual_working_days * daily_working_hours
+    
+    # 1人あたりの必要時間（年間）
+    hours_needed_per_engineer = total_hours_needed / total_engineers
+    
+    # 1人あたりの残業時間（年間）
+    annual_overtime_per_engineer = max(0, hours_needed_per_engineer - base_hours_per_engineer)
+    
+    # 月間平均残業時間
+    monthly_overtime_per_engineer = annual_overtime_per_engineer / 12
     
     # Calculate average products per engineer
     # First, ensure every product has minimum engineers

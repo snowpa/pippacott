@@ -92,7 +92,7 @@
                                 <div class="card-body">
                                     <div class="mb-3">
                                         <div class="d-flex justify-content-between">
-                                            <span>エンジニア1人あたりの月間平均残業時間:</span>
+                                            <span>エンジニア1人あたりの月間平均残業時間（目標月間残業{{ params.get('target_monthly_overtime', '20') }}時間）:</span>
                                             <span id="monthlyOvertime" class="fw-bold"></span>
                                         </div>
                                         <div class="progress mt-1">
@@ -180,7 +180,7 @@
                                     
                                     <div class="mb-3">
                                         <div class="d-flex justify-content-between">
-                                            <span>年間稼働時間の余剰/不足（目標月間残業{{ params.get('target_monthly_overtime', '20') }}時間）:</span>
+                                            <span>年間稼働時間の余剰/不足:</span>
                                             <span id="hoursSurplusDeficit" class="fw-bold"></span>
                                         </div>
                                     </div>
@@ -298,12 +298,13 @@
             $('#hoursSurplusDeficit').text(results.hours_surplus_deficit + ' 時間');
             
             // プログレスバーを更新
-            // 残業時間プログレスバー (0-30時間の範囲でパーセンテージ計算)
-            const overtimePercent = Math.min(100, (results.monthly_overtime_per_engineer / 30) * 100);
+            // 残業時間プログレスバー (目標値を基準にパーセンテージ計算)
+            const targetOvertime = {{ params.get('target_monthly_overtime', '20') }};
+            const overtimePercent = Math.min(100, (results.monthly_overtime_per_engineer / (targetOvertime * 1)) * 100);
             $('#overtimeProgress')
                 .css('width', overtimePercent + '%')
                 .removeClass('bg-success bg-warning bg-danger')
-                .addClass(getProgressBarClass(results.monthly_overtime_per_engineer, 0, 10, 20));
+                .addClass(getProgressBarClass(results.monthly_overtime_per_engineer, 0, targetOvertime * 1, targetOvertime));
             
             // 担当製品数プログレスバー
             const maxProducts = parseInt(inputs.max_products_per_engineer);
@@ -311,7 +312,7 @@
             $('#productsProgress')
                 .css('width', productsPercent + '%')
                 .removeClass('bg-success bg-warning bg-danger')
-                .addClass(getProgressBarClass(results.avg_products_per_engineer, 0, maxProducts * 0.8, maxProducts));
+                .addClass(getProgressBarClass(results.avg_products_per_engineer, 0, maxProducts * 1, maxProducts));
             
             // カバー率プログレスバー
             const coveragePercent = Math.min(100, results.coverage_ratio * 100);
