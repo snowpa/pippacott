@@ -280,22 +280,26 @@
             }
         });
 
-        // Resilience Score Distribution Chart
+        // 担当者数分布（基準値との差分）
         const resilienceData = {
-            '0-20': 0,
-            '21-40': 0,
-            '41-60': 0,
-            '61-80': 0,
-            '81-100': 0
+            '-3人以下': 0,
+            '-2人': 0,
+            '-1人': 0,
+            '基準値': 0,
+            '+1人': 0,
+            '+2人': 0,
+            '+3人以上': 0
         };
 
         products.forEach(product => {
-            const score = product.resilience_score;
-            if (score <= 20) resilienceData['0-20']++;
-            else if (score <= 40) resilienceData['21-40']++;
-            else if (score <= 60) resilienceData['41-60']++;
-            else if (score <= 80) resilienceData['61-80']++;
-            else resilienceData['81-100']++;
+            const diff = product.resilience_score;
+            if (diff <= -3) resilienceData['-3人以下']++;
+            else if (diff === -2) resilienceData['-2人']++;
+            else if (diff === -1) resilienceData['-1人']++;
+            else if (diff === 0) resilienceData['基準値']++;
+            else if (diff === 1) resilienceData['+1人']++;
+            else if (diff === 2) resilienceData['+2人']++;
+            else resilienceData['+3人以上']++;
         });
 
         const resilienceCtx = document.getElementById('resilienceChart').getContext('2d');
@@ -307,18 +311,22 @@
                     label: '製品数',
                     data: Object.values(resilienceData),
                     backgroundColor: [
-                        'rgba(255, 99, 132, 0.6)',
-                        'rgba(255, 159, 64, 0.6)',
-                        'rgba(255, 205, 86, 0.6)',
-                        'rgba(75, 192, 192, 0.6)',
-                        'rgba(54, 162, 235, 0.6)'
+                        'rgba(255, 99, 132, 0.6)',  // 赤 (-3以下)
+                        'rgba(255, 159, 64, 0.6)',  // オレンジ (-2)
+                        'rgba(255, 205, 86, 0.6)',  // 黄 (-1)
+                        'rgba(75, 192, 192, 0.6)',  // 緑 (基準値)
+                        'rgba(54, 162, 235, 0.6)',  // 青 (+1)
+                        'rgba(153, 102, 255, 0.6)', // 紫 (+2)
+                        'rgba(201, 203, 207, 0.6)'  // グレー (+3以上)
                     ],
                     borderColor: [
                         'rgb(255, 99, 132)',
                         'rgb(255, 159, 64)',
                         'rgb(255, 205, 86)',
                         'rgb(75, 192, 192)',
-                        'rgb(54, 162, 235)'
+                        'rgb(54, 162, 235)',
+                        'rgb(153, 102, 255)',
+                        'rgb(201, 203, 207)'
                     ],
                     borderWidth: 1
                 }]
