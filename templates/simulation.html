@@ -10,7 +10,7 @@
                 <h5 class="card-title mb-0">稼働シミュレーション</h5>
             </div>
             <div class="card-body">
-                <p class="text-muted">様々なパラメータを調整して、人員配置の最適化をシミュレーションすることができます。</p>
+                <p class="text-muted">様々なパラメータを調整して、人員配置の最適化をシミュレーションすることができます。与えられたパラメータ内で最適化した理論値のため実際とは異なる場合があります。</p>
 
                 <div class="row g-3">
                     <div class="col-md-8">
@@ -22,11 +22,11 @@
                                 <div class="card-body">
                                     <div class="row g-3">
                                         <div class="col-md-4">
-                                            <label for="total_engineers" class="form-label">エンジニア総数</label>
+                                            <label for="total_engineers" class="form-label">エンジニア数</label>
                                             <input type="number" class="form-control" id="total_engineers" name="total_engineers" min="1" value="40" required>
                                         </div>
                                         <div class="col-md-4">
-                                            <label for="total_products" class="form-label">製品総数</label>
+                                            <label for="total_products" class="form-label">製品数</label>
                                             <input type="number" class="form-control" id="total_products" name="total_products" min="1" value="50" required>
                                         </div>
                                         <div class="col-md-4">
@@ -50,13 +50,12 @@
                                         <div class="col-md-6">
                                             <div class="card h-100">
                                                 <div class="card-header bg-primary text-white">
-                                                    <h6 class="card-title mb-0">稼働状況</h6>
+                                                    <h6 class="card-title mb-0">稼働予測</h6>
                                                 </div>
                                                 <div class="card-body">
                                                     <div class="mb-3">
-                                                        <label class="form-label">月間平均残業時間</label>
+                                                        <label class="form-label">月間平均残業（目標: {{ params.get('target_monthly_overtime', '20') }}時間）</label>
                                                         <div class="d-flex justify-content-between">
-                                                            <span>目標: {{ params.get('target_monthly_overtime', '20') }}時間</span>
                                                             <span id="monthlyOvertime" class="fw-bold"></span>
                                                         </div>
                                                     </div>
@@ -69,9 +68,8 @@
                                                     </div>
 
                                                     <div class="mb-3">
-                                                        <label class="form-label">年間稼働時間</label>
+                                                        <label class="form-label">年間の余剰/不足稼働時間（目標残業時間含む）</label>
                                                         <div class="d-flex justify-content-between">
-                                                            <span>余剰/不足:</span>
                                                             <span id="hoursSurplusDeficit" class="fw-bold"></span>
                                                         </div>
                                                     </div>
@@ -82,11 +80,11 @@
                                         <div class="col-md-6">
                                             <div class="card h-100">
                                                 <div class="card-header bg-success text-white">
-                                                    <h6 class="card-title mb-0">製品担当状況</h6>
+                                                    <h6 class="card-title mb-0">製品担当予測</h6>
                                                 </div>
                                                 <div class="card-body">
                                                     <div class="mb-3">
-                                                        <label class="form-label">担当エンジニア数（1製品あたり・各エンジニアの担当製品数上限を満たした場合）</label>
+                                                        <label class="form-label">1製品あたりの担当者数</label>
                                                         <div class="d-flex justify-content-between">
                                                             <span id="avgEngineersPerProduct" class="fw-bold"></span>
                                                         </div>
@@ -108,11 +106,7 @@
                                                     <div class="mb-3">
                                                         <label class="form-label">最適エンジニア人数</label>
                                                         <div class="d-flex justify-content-between">
-                                                            <span id="optimalEngineerCount" class="fw-bold"></span>
-                                                        </div>
-                                                        <div class="d-flex justify-content-between">
-                                                            <span>必要な増減:</span>
-                                                            <span id="engineerSurplusDeficit" class="fw-bold"></span>
+                                                            <span id="optimalEngineerCount" class="fw-bold" > </span>
                                                         </div>
                                                     </div>
 
@@ -120,14 +114,6 @@
                                                         <label class="form-label">最適製品数</label>
                                                         <div class="d-flex justify-content-between">
                                                             <span id="optimalProductCount" class="fw-bold"></span>
-                                                        </div>
-                                                        <div class="d-flex justify-content-between">
-                                                            <span>現状との差分:</span>
-                                                            <span id="productSurplusDeficit" class="fw-bold"></span>
-                                                            <div class="mt-1">
-                                                                <span>追加で担当可能な製品数:</span>
-                                                                <span id="surplusCapacity" class="fw-bold"></span>
-                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -192,16 +178,75 @@
             <div class="card-body">
                 <p id="analysisText" class="mb-0"></p>
                 <div class="mt-3">
-                    <h6 class="fw-bold">計算の内訳:</h6>
                     <ul>
-                        <li><strong>年間必要工数</strong> = 年間SR件数 × SRあたりの対応時間</li>
-                        <li><strong>総必要工数</strong> = 年間必要工数 ÷SR対応割合 <small class="text-muted">（SR対応以外の業務時間を含む）</small></li>
-                        <li><strong>最適エンジニア数</strong> = 総必要工数 ÷ (年間稼働日数 × 日勤務時間 + 年間目標残業時間)</li>
-                        <li><strong>最適製品数</strong> = (エンジニア数 × 担当製品数上限) ÷ 製品あたり最小担当人数</li>
+                        <li>
+                            稼働シミュレーション - 計算方法の説明
+                            <section>
+                                <p>1. 月間平均残業</p>
+                                <ul>
+                                    <li>年間必要工数 = 年間SR件数 × SRあたりの対応時間</li>
+                                    <li>総必要工数 = 年間必要工数 ÷ SR対応割合（SR対応以外の業務時間を含む）</li>
+                                    <li>エンジニア1人あたりの必要時間 = 総必要工数 ÷ エンジニア総数</li>
+                                    <li>基準労働時間 = 年間稼働日数 × 1日の稼働時間</li>
+                                    <li>年間残業時間 = max(0, エンジニア1人あたりの必要時間 - 基準労働時間)</li>
+                                    <li>月間平均残業 = 年間残業時間 ÷ 12</li>
+                                    <p></p>
+                                </ul>
+                            </section>
+                
+                            <section>
+                                <p>2. 年間対応SR数（1人あたり）</p>
+                                <ul>
+                                    <li>エンジニア1人あたりのSR数 = 年間SR総件数 ÷ エンジニア総数</li>
+                                    <p></p>
+                                </ul>
+                            </section>
+                
+                            <section>
+                                <p>3. 年間の余剰/不足稼働時間</p>
+                                <ul>
+                                    <li>基準総稼働時間 = エンジニア総数 × 年間稼働日数 × 1日の稼働時間</li>
+                                    <li>目標残業時間 = エンジニア総数 × (目標月間残業時間 × 12)</li>
+                                    <li>総利用可能時間 = 基準総稼働時間 + 目標残業時間</li>
+                                    <li>余剰/不足時間 = 総利用可能時間 - 総必要工数</li>
+                                    <p></p>
+                                </ul>
+                            </section>
+                
+                            <section>
+                                <p>4. 1製品あたりの担当者数</p>
+                                <ul>
+                                    <li>総アサイン可能数 = エンジニア総数 × エンジニアの担当製品数上限</li>
+                                    <li>製品あたりの平均担当者数 = (エンジニア総数 × エンジニアあたりの平均担当製品数) ÷ 製品総数</li>
+                                    <p></p>
+                                </ul>
+                            </section>
+                
+                            <section>
+                                <p>5. 最適エンジニア人数</p>
+                                <ul>
+                                    <li>エンジニア1人あたりの年間利用可能時間 = (年間稼働日数 × 1日の稼働時間) + (目標月間残業時間 × 12)</li>
+                                    <li>最適エンジニア数 = 総必要工数 ÷ エンジニア1人あたりの年間利用可能時間</li>
+                                    <li>必要な増減 = 最適エンジニア数 - 現在のエンジニア総数</li>
+                                    <p></p>
+                                </ul>
+                            </section>
+                
+                            <section>
+                                <p>6. 最適製品数</p>
+                                <ul>
+                                    <li>総アサイン可能数 = エンジニア総数 × エンジニアの担当製品数上限</li>
+                                    <li>必要最小アサイン数 = 製品総数 × 製品担当エンジニアの最小人数</li>
+                                    <li>アサイン差分 = 総アサイン可能数 - 必要最小アサイン数</li>
+                                    <li>余剰可能製品数 = アサイン差分 ÷ 製品担当エンジニアの最小人数</li>
+                                    <li>最適製品数 = 現在の製品数 + 余剰可能製品数</li>
+                                    <p></p>
+                                </ul>
+                            </section>
+                
+                            <p>※ すべての計算において、小数点以下は適切に四捨五入されます。</p>
+                        </li>
                     </ul>
-                </div>
-            </div>
-        </div>
                 </div>
             </div>
         </div>
@@ -278,9 +323,9 @@
             $('#optimalProductCount').text(results.optimal_product_count + ' 製品');
             $('#productSurplusDeficit').text(results.product_surplus_deficit + ' 製品');
             $('#hoursSurplusDeficit')
-    .removeClass('text-success text-warning text-danger')
-    .addClass(getValueColorClass(results.hours_surplus_deficit, 0, -1, -1000, true))
-    .text(results.hours_surplus_deficit + ' 時間');
+                .removeClass('text-success text-warning text-danger')
+                .addClass(getValueColorClass(results.hours_surplus_deficit, 0, -1, -1000, true))
+                .text(results.hours_surplus_deficit + ' 時間');
 
             // 値の色付け
             const targetOvertime = {{ params.get('target_monthly_overtime', '20') }};
@@ -296,7 +341,7 @@
             $('#avgInquiriesPerEngineer')
                 .removeClass('text-success text-warning text-danger')
                 .addClass(overtimeColor)
-                .text(results.avg_inquiries_per_engineer);
+                .text(results.avg_inquiries_per_engineer + ' 件');
 
             // 担当エンジニア数の色付け（条件を反転）
             const engineersPerProductColor = getValueColorClass(
@@ -309,7 +354,7 @@
             $('#avgEngineersPerProduct')
                 .removeClass('text-success text-warning text-danger')
                 .addClass(engineersPerProductColor)
-                .text(results.avg_engineers_per_product);
+                .text(results.avg_engineers_per_product + ' 人');
             $('#monthlyOvertime')
                 .removeClass('text-success text-warning text-danger')
                 .addClass(getValueColorClass(results.monthly_overtime_per_engineer, 0, targetOvertime * 1, targetOvertime))
