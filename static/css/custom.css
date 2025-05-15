@@ -232,9 +232,64 @@ body {
     background: var(--bs-primary);
 }
 
+/* シミュレーション結果の数値表示 */
+#simulationResults .fw-bold {
+    font-size: 1.5rem;
+    line-height: 1.2;
+    margin: 0.5rem 0;
+    display: block;
+}
+
+#simulationResults .form-label {
+    font-size: 1rem;
+    color: #666;
+}
+
+/* シミュレーション画面のカードスタイル */
+.card {
+    border: none;
+    margin-bottom: 1rem;
+}
+
+.card .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+    padding: 1rem;
+}
+
+.card .card-body {
+    padding: 1rem;
+}
+
+.card.shadow-sm {
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.075) !important;
+}
+
 /* コンパクトカード用スタイル */
 .compact-card {
     padding: 0.75rem 1rem !important;
+}
+
+/* シミュレーション結果表示用スタイル */
+#simulationResults .card-header {
+    padding: 0.75rem 1rem;
+}
+
+#simulationResults .card-body {
+    padding: 1rem;
+}
+
+#simulationResults .form-label {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+/* パラメータ表示エリアのスタイル */
+.parameter-section {
+    background-color: rgba(0,0,0,.03);
+    border-radius: 0.25rem;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
 }
 
 .compact-card h5 {
