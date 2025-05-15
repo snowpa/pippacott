@@ -47,7 +47,7 @@
                             <div class="row g-4">
                                 <div class="col-12">
                                     <div class="row g-4">
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <div class="card h-100">
                                                 <div class="card-header bg-primary text-white">
                                                     <h6 class="card-title mb-0">稼働状況</h6>
@@ -58,9 +58,6 @@
                                                         <div class="d-flex justify-content-between">
                                                             <span>目標: {{ params.get('target_monthly_overtime', '20') }}時間</span>
                                                             <span id="monthlyOvertime" class="fw-bold"></span>
-                                                        </div>
-                                                        <div class="progress mt-1">
-                                                            <div id="overtimeProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
                                                         </div>
                                                     </div>
 
@@ -82,55 +79,32 @@
                                             </div>
                                         </div>
 
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <div class="card h-100">
                                                 <div class="card-header bg-success text-white">
                                                     <h6 class="card-title mb-0">製品担当状況</h6>
                                                 </div>
                                                 <div class="card-body">
                                                     <div class="mb-3">
-                                                        <label class="form-label">担当製品数（1人あたり）</label>
-                                                        <div class="d-flex justify-content-between">
-                                                            <span id="avgProductsPerEngineer" class="fw-bold"></span>
-                                                        </div>
-                                                        <div class="progress mt-1">
-                                                            <div id="productsProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="mb-3">
-                                                        <label class="form-label">担当エンジニア数（1製品あたり）</label>
+                                                        <label class="form-label">担当エンジニア数（1製品あたり・各エンジニアの担当製品数上限を満たした場合）</label>
                                                         <div class="d-flex justify-content-between">
                                                             <span id="avgEngineersPerProduct" class="fw-bold"></span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="mb-3">
-                                                        <label class="form-label">担当者数不足の製品</label>
-                                                        <div class="d-flex justify-content-between">
-                                                            <span id="understaffedProducts" class="fw-bold"></span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="mb-3">
-                                                        <label class="form-label">担当者数基準カバー率</label>
-                                                        <div class="d-flex justify-content-between">
-                                                            <span id="coverageRatio" class="fw-bold"></span>
-                                                        </div>
-                                                        <div class="progress mt-1">
-                                                            <div id="coverageProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
 
-                                        <div class="col-md-4">
-                                            <div class="card h-100">
-                                                <div class="card-header bg-info text-white">
-                                                    <h6 class="card-title mb-0">最適化提案</h6>
-                                                </div>
-                                                <div class="card-body">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="card-title mb-0">最適化提案</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
                                                     <div class="mb-3">
                                                         <label class="form-label">最適エンジニア人数</label>
                                                         <div class="d-flex justify-content-between">
@@ -150,10 +124,15 @@
                                                         <div class="d-flex justify-content-between">
                                                             <span>現状との差分:</span>
                                                             <span id="productSurplusDeficit" class="fw-bold"></span>
+                                                            <div class="mt-1">
+                                                                <span>追加で担当可能な製品数:</span>
+                                                                <span id="surplusCapacity" class="fw-bold"></span>
+                                                            </div>
                                                         </div>
                                                     </div>
-
-                                                    <div id="recommendationBox" class="alert alert-warning mt-3 mb-0">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div id="recommendationBox" class="alert alert-warning h-100 mb-0">
                                                         <h6 class="alert-heading fw-bold">改善提案:</h6>
                                                         <div id="recommendation"></div>
                                                     </div>
@@ -298,31 +277,60 @@
             $('#engineerSurplusDeficit').text(results.engineer_surplus_deficit + ' 人');
             $('#optimalProductCount').text(results.optimal_product_count + ' 製品');
             $('#productSurplusDeficit').text(results.product_surplus_deficit + ' 製品');
-            $('#hoursSurplusDeficit').text(results.hours_surplus_deficit + ' 時間');
+            $('#hoursSurplusDeficit')
+    .removeClass('text-success text-warning text-danger')
+    .addClass(getValueColorClass(results.hours_surplus_deficit, 0, -1, -1000, true))
+    .text(results.hours_surplus_deficit + ' 時間');
 
-            // プログレスバーを更新
-            // 残業時間プログレスバー (目標値を基準にパーセンテージ計算)
+            // 値の色付け
             const targetOvertime = {{ params.get('target_monthly_overtime', '20') }};
-            const overtimePercent = Math.min(100, (results.monthly_overtime_per_engineer / (targetOvertime * 1)) * 100);
-            $('#overtimeProgress')
-                .css('width', overtimePercent + '%')
-                .removeClass('bg-success bg-warning bg-danger')
-                .addClass(getProgressBarClass(results.monthly_overtime_per_engineer, 0, targetOvertime * 1, targetOvertime));
+            const minEngineersPerProduct = {{ params.get('min_engineers_per_product', '5') }};
 
-            // 担当製品数プログレスバー
+            // 月間残業時間と年間対応SR数の色付けを連動
+            const overtimeColor = getValueColorClass(results.monthly_overtime_per_engineer, 0, targetOvertime * 1, targetOvertime);
+            $('#monthlyOvertime')
+                .removeClass('text-success text-warning text-danger')
+                .addClass(overtimeColor)
+                .text(results.monthly_overtime_per_engineer + ' 時間');
+
+            $('#avgInquiriesPerEngineer')
+                .removeClass('text-success text-warning text-danger')
+                .addClass(overtimeColor)
+                .text(results.avg_inquiries_per_engineer);
+
+            // 担当エンジニア数の色付け（条件を反転）
+            const engineersPerProductColor = getValueColorClass(
+                results.avg_engineers_per_product,
+                minEngineersPerProduct * 0.8,  // 最小人数より20%不足
+                minEngineersPerProduct,        // 最小人数
+                minEngineersPerProduct * 1.2,  // 20%余裕がある
+                true                           // inverse=true で値が大きいほど良い判定に
+            );
+            $('#avgEngineersPerProduct')
+                .removeClass('text-success text-warning text-danger')
+                .addClass(engineersPerProductColor)
+                .text(results.avg_engineers_per_product);
+            $('#monthlyOvertime')
+                .removeClass('text-success text-warning text-danger')
+                .addClass(getValueColorClass(results.monthly_overtime_per_engineer, 0, targetOvertime * 1, targetOvertime))
+                .text(results.monthly_overtime_per_engineer + ' 時間');
+
             const maxProducts = parseInt(inputs.max_products_per_engineer);
-            const productsPercent = Math.min(100, (results.avg_products_per_engineer / maxProducts) * 100);
-            $('#productsProgress')
-                .css('width', productsPercent + '%')
-                .removeClass('bg-success bg-warning bg-danger')
-                .addClass(getProgressBarClass(results.avg_products_per_engineer, 0, maxProducts * 1, maxProducts));
+            $('#avgProductsPerEngineer')
+                .removeClass('text-success text-warning text-danger')
+                .addClass(getValueColorClass(
+                    results.avg_products_per_engineer,
+                    maxProducts * 0.8,  // 20%余裕がある
+                    maxProducts,        // 上限
+                    maxProducts * 1.2,  // 20%超過
+                    true               // inverse=true で値が小さいほど良い判定に
+                ))
+                .text(results.avg_products_per_engineer);
 
-            // カバー率プログレスバー
-            const coveragePercent = Math.min(100, results.coverage_ratio * 100);
-            $('#coverageProgress')
-                .css('width', coveragePercent + '%')
-                .removeClass('bg-success bg-warning bg-danger')
-                .addClass(getProgressBarClass(results.coverage_ratio, 1, 0.8, 0.5, true));
+            $('#coverageRatio')
+                .removeClass('text-success text-warning text-danger')
+                .addClass(getValueColorClass(results.coverage_ratio, 1, 0.8, 0.5, true))
+                .text(results.coverage_ratio);
 
             // 推奨事項を生成
             let recommendation = '';
@@ -390,16 +398,16 @@
             $('#simulationResults').show();
         }
 
-        // プログレスバーの色を決定する関数
-        function getProgressBarClass(value, goodThreshold, warningThreshold, dangerThreshold, inverse = false) {
+        // 値の色を決定する関数
+        function getValueColorClass(value, goodThreshold, warningThreshold, dangerThreshold, inverse = false) {
             if (inverse) {
-                if (value >= goodThreshold) return 'bg-success';
-                if (value >= warningThreshold) return 'bg-warning';
-                return 'bg-danger';
+                if (value >= goodThreshold) return 'text-success';
+                if (value >= warningThreshold) return 'text-warning';
+                return 'text-danger';
             } else {
-                if (value <= goodThreshold) return 'bg-success';
-                if (value <= warningThreshold) return 'bg-warning';
-                return 'bg-danger';
+                if (value <= goodThreshold) return 'text-success';
+                if (value <= warningThreshold) return 'text-warning';
+                return 'text-danger';
             }
         }
     });

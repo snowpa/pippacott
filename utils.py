@@ -398,22 +398,25 @@ def calculate_simulation_results(data):
     else:
         optimal_engineer_count = float('inf')
 
-    # Calculate optimal product count
-    # 1. Workload-based limit: How many products can be handled with current engineer capacity
-    if total_products > 0:
-        hours_per_product = total_hours_needed / total_products
-        workload_based_limit = math.floor((total_available_hours * inquiry_work_ratio) / hours_per_product)
+    # Calculate optimal product count based on total assignment capacity vs required minimum staffing
+    total_possible_assignments = total_engineers * max_products_per_engineer
+    minimum_required_assignments = total_products * min_engineers_per_product
+    
+    # エンジニア総数×担当製品数上限と製品総数×製品担当エンジニアの最小人数との差分を計算
+    assignment_difference = (total_engineers * max_products_per_engineer) - (total_products * min_engineers_per_product)
+    
+    # 差分を製品担当エンジニアの最小人数で割って余剰製品数を算出
+    surplus_capacity = math.floor(assignment_difference / min_engineers_per_product)
+    
+    if surplus_capacity >= 0:
+        # 余裕がある場合は現在の製品数に余剰可能数を加算
+        optimal_product_count = total_products + surplus_capacity
     else:
-        workload_based_limit = 0
-    
-    # 2. Assignment-based limit: Maximum products that can be properly staffed
-    max_assignments = total_engineers * max_products_per_engineer
-    assignment_based_limit = math.floor(max_assignments / min_engineers_per_product)
-    
-    # Take the minimum of both limits
-    optimal_product_count = min(workload_based_limit, assignment_based_limit)
+        # 不足する場合は、最大可能な製品数を計算
+        optimal_product_count = total_products + surplus_capacity  # surplus_capacityは負の値
     
     return {
+        'surplus_capacity': surplus_capacity,
         'monthly_overtime_per_engineer': round(monthly_overtime_per_engineer, 1),
         'avg_products_per_engineer': round(avg_products_per_engineer, 1),
         'avg_engineers_per_product': round(avg_engineers_per_product, 1),
